@@ -1,22 +1,71 @@
-import SocketServer
 import logging
 import hashlib
-import socket
-import math
 
 
 class Key(object):
 
     def __init__(self, value):
         self.value = value
+        self.idlength = 256
 
-    def getValue(self, value):
-        self.value = self.hash(value).hexdigest()
- 
-    def sum(self, value):
-        raise NotImplementedError 
+    def __repr__(self):
+        return self.value[:7]
+
+    def canonicalize(self, value):
+        return format(value, '0>{}x'.format(self.idlength/4))
+        
+    def __add__(self, value):
+        if isinstance(value, int):
+            return self.sumint(value)
+        elif isinstance(value, str):
+            return self.sumhex(value)
+        elif isinstance(value, Key):
+            return self.sumhex(value.value)
+        else:
+            #self.log.error("Sum with unknow type")
+            raise TypeError
     
-    # TODO optim : each between call will be a RPC, sad if we locally know the value of remote node ?
+    def sumint(self, value):
+        '''
+        Return sum uid + value in hexa representation
+        @param value: int to sum with uid value
+        '''
+        res = (int(self.value, 16) + value) % pow(2, self.idlength)
+        return self.canonicalize(res)
+
+    def sumhex(self, value):
+        res = (int(self.value, 16) + int(value, 16)) % pow(2, self.idlength)
+        return self.canonicalize(res)
+
+    def __sub__(self, value):
+        if isinstance(value, int):
+            return self.subint(value)
+        elif isinstance(value, str):
+            return self.subhex(value)
+        elif isinstance(value, Key):
+            return self.subhex(value.value)
+        else:
+            #self.log.error("Sub with unknow type")
+            raise TypeError
+    
+    def subint(self, value):
+        '''
+        Return sub uid - value in hexa representation
+        @param value: int to sub with uid value
+        '''
+        res = (int(self.value, 16) - value) % pow(2, self.idlength)
+        return self.canonicalize(res)
+
+    def subhex(self, value):
+        '''
+        Return sub uid - value in hexa representation
+        @param value: str repr of hexa number
+        '''
+        res = (int(self.value, 16) - int(value, 16)) % pow(2, self.idlength)
+        return self.canonicalize(res)
+
+    
+    # TODO optim : each isbetween call will be a RPC, sad if we locally know the value of remote node ?
     def isbetween(self, limit1, limit2):
         '''
         Returns True if self.value is inside [limit1,  limit2]
@@ -42,37 +91,11 @@ class Key(object):
             # limit1 == limit2
             raise Exception
 
-    #def modulo(self, modulator):
-
-
 class Uid(Key):
     
-    # TODO  implem modulo, soustraction
     def __init__(self, ip, port):
         hash = hashlib.sha256(ip + ":" + port)
-        self.idlength = 256
-        self.value = hash.hexdigest()
-
-    def sum(self, value):
-        if value is int:
-            return self.sumint(value)
-        elif value is str:
-            return self.sumhex(value)
-        else:
-            #self.log.error("Sum with unknow type")
-            raise TypeError
-
-    # TODO handle case when sum put key greater than FFFFF...
-    def sumint(self, value):
-        '''
-        Return the result of the sum uid + value
-        @param value: int to sum with uid value
-        '''
-        res = int(self.value, 16) + value
-        return hex(res).split("0x")[1]
-    
-    def sumhex(self, value):
-        return hex(int(self.value, 16) + int(value, 16)).split("0x")[1]
+        Key.__init__(self, hash.hexdigest())
 
 
 class Node(object):
@@ -173,8 +196,8 @@ class Node(object):
 
     def printFingers(self):
         for n, f in enumerate(self.finger):
-            self.log.debug("TABLE:    finger{}: {}".format(n, f.uid.value))
-            self.log.debug("COMPUTED: finger{}: {}".format(n, self.lookupfinger(n, self.uid.idlength).uid.value))
+            self.log.debug("TABLE:    finger{}: {}".format(n, f.uid))
+            self.log.debug("COMPUTED: finger{}: {}".format(n, self.lookupfinger(n, self.uid.idlength).uid))
             if f.uid.value != self.lookupfinger(n, self.uid.idlength).uid.value:
                 self.log.error("error")
 
@@ -234,3 +257,5 @@ if __name__ == "__main__":
     print "succ de 03:" + node6.lookup("3").uid.value
     print "succ de 03:" + node7.lookup("3").uid.value
     print "succ de 03:" + node0.lookup("3").uid.value
+
+
