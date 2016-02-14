@@ -4,8 +4,19 @@ from chord import Node, Key, Uid
 
 if __name__ == "__main__":
 
-    ip = "127.0.0.1"
+    parser = argparse.ArgumentParser(description="Create a node")
 
+    parser.add_argument("-m", "--main", action="store_true",
+            help="Define the created node as a central one :"
+            "the one which will be contacted by others")
+    parser.add_argument("-a", "--address", help="IP address of node")
+    parser.add_argument("-p", "--port", help="Listening port of node")
+
+    args = parser.parse_args()
+    ip = args.address
+    port = args.port
+
+    ip = "127.0.0.1"
     node0 = Node(ip, "0")
     node1 = Node(ip, "1")
     node2 = Node(ip, "2")
