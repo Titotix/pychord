@@ -51,13 +51,13 @@ if __name__ == "__main__":
     node5.printFingers()
     node6.printFingers()
     node7.printFingers()
-    print "succ de 03:" + node2.lookup("3").uid.value
-    print "succ de 03:" + node3.lookup("3").uid.value
-    print "succ de 03:" + node4.lookup("3").uid.value
-    print "succ de 03:" + node5.lookup("3").uid.value
-    print "succ de 03:" + node6.lookup("3").uid.value
-    print "succ de 03:" + node7.lookup("3").uid.value
-    print "succ de 03:" + node0.lookup("3").uid.value
+    print "succ de 03:" + node2.lookup("3", True).uid.value
+    print "succ de 03:" + node3.lookup("3", True).uid.value
+    print "succ de 03:" + node4.lookup("3", True).uid.value
+    print "succ de 03:" + node5.lookup("3", True).uid.value
+    print "succ de 03:" + node6.lookup("3", True).uid.value
+    print "succ de 03:" + node7.lookup("3", True).uid.value
+    print "succ de 03:" + node0.lookup("3", True).uid.value
 
 
 

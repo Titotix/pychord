@@ -12,10 +12,14 @@ class Key(object):
         return self.value[:7]
 
     def canonicalize(self, value):
+        '''
+        Returns the str repr of hexa value with the right number of hexa char
+        Basically padd the input with'0' and get rid of '0x' and 'L'
+        '''
         return format(value, '0>{}x'.format(self.idlength/4))
         
     def __add__(self, value):
-        if isinstance(value, int):
+        if isinstance(value, int) or isinstance(value, long):
             return self.sumint(value)
         elif isinstance(value, str):
             return self.sumhex(value)
@@ -23,6 +27,7 @@ class Key(object):
             return self.sumhex(value.value)
         else:
             #self.log.error("Sum with unknow type")
+            print type(value)
             raise TypeError
     
     def sumint(self, value):
@@ -129,6 +134,7 @@ class Node(object):
         '''
         self.log.debug("{} want to join {}".format(newnode.uid.value, self.uid.value))
         if newnode.uid.value != self.uid.value:
+            # TODO optim : no need to update all node of the ring at each new node
             self.updatesucc(newnode)
             self.updatefinger(newnode, self)
         else:
@@ -156,49 +162,59 @@ class Node(object):
         @param firstnode: node which launch the update
         '''
         for i in range(0, self.uid.idlength):
-            self.finger[i] = self.lookupfinger(i, self.uid.idlength)
+            self.finger[i] = self.lookupfinger(i, self.uid.idlength, useOnlySucc=True)
         if firstnode is not self.successor:
             self.successor.updatefinger(newnode, firstnode)
 
-    def lookupfinger(self, k, m):
+    def lookupfinger(self, k, m, useOnlySucc=False):
         '''
         Returns the node responsible for finger k
-        @param m: bits number to create the ring.
+        @param m: Id length of the ring. (m = Key.idlength)
             Ring is constituted of 2^m nodes maximum
         '''
-        return self.lookup(self.calcfinger(k, m))
+        return self.lookup(self.calcfinger(k, m), useOnlySucc)
 
             
-    def lookup(self, key):
+    def lookup(self, key, useOnlySucc=False):
         
         if isinstance(key, Node):
             key = node.uid
         elif isinstance(key, Key):
             key = key
-        else:
+        elif isinstance(key, str):
             key = Key(key)
-        # Self is successor ?
-        if self.uid.value == key.value:
-            return self
-        # Is self.successor the successor of key ? 
-        if key.isbetween(self.uid.value, self.successor.uid.value):
-            return self.successor
-        
-        return self.successor.lookup(key)
+        else:
+            raise Exception
+        if useOnlySucc:
+            # Self is successor ?
+            if self.uid.value == key.value:
+                return self
+            # Is self.successor the successor of key ? 
+            if key.isbetween(self.uid.value, self.successor.uid.value):
+                return self.successor
+            
+            return self.successor.lookup(key, useOnlySucc)
+        else:
+            # Use finger table to optim lookup
+            if key > self.finger[self.uid.idlength - 1]:
+                return self.finger[self.uid.idlength - 1].lookup(key, useOnlySucc)
+            else:
+                # self knows the answer because key < (self finger max)
+                pass
+                self.log.error("no way")
 
     def calcfinger(self, k, m):
         '''
         Returns computed key for finger k while ring is module 2^m
         @param k: from 0 to (m - 1)
         '''
-        # WIP TODO modulo to implement in Key class
-        return str(self.uid.sumint(pow(2, k))) # % pow(2, m))
+        return self.uid + pow(2, k)
 
     def printFingers(self):
         for n, f in enumerate(self.finger):
             self.log.debug("TABLE:    finger{}: {}".format(n, f.uid))
-            self.log.debug("COMPUTED: finger{}: {}".format(n, self.lookupfinger(n, self.uid.idlength).uid))
-            if f.uid.value != self.lookupfinger(n, self.uid.idlength).uid.value:
+            self.log.debug("COMPUTED: finger{}: {}".format(n, self.lookupfinger(n, self.uid.idlength, useOnlySucc=True).uid))
+            if f.uid.value != self.lookupfinger(n, self.uid.idlength, useOnlySucc=True).uid.value:
                 self.log.error("error")
 
     def printRing(self):
@@ -210,52 +226,4 @@ class Node(object):
             self.log.debug(key)
             succ = succ.successor
             key = succ.uid.value
-
-
-if __name__ == "__main__":
-
-    ip = "127.0.0.1"
-
-    node0 = Node(ip, "0")
-    node1 = Node(ip, "1")
-    node2 = Node(ip, "2")
-    node3 = Node(ip, "3")
-    node4 = Node(ip, "4")
-    node5 = Node(ip, "5")
-    node6 = Node(ip, "6")
-    node7 = Node(ip, "7")
-
-    node0.addToRing(node1)
-    node1.addToRing(node2)
-    node1.addToRing(node3)
-    node3.addToRing(node4)
-    node3.addToRing(node5)
-    node5.addToRing(node6)
-    node1.addToRing(node7)
-    
-    node0.printRing()
-    node1.printRing()
-    node2.printRing()
-    node3.printRing()
-    node4.printRing()
-    node5.printRing()
-    node6.printRing()
-    node7.printRing()
-
-    node0.printFingers()
-    node1.printFingers()
-    node2.printFingers()
-    node3.printFingers()
-    node4.printFingers()
-    node5.printFingers()
-    node6.printFingers()
-    node7.printFingers()
-    print "succ de 03:" + node2.lookup("3").uid.value
-    print "succ de 03:" + node3.lookup("3").uid.value
-    print "succ de 03:" + node4.lookup("3").uid.value
-    print "succ de 03:" + node5.lookup("3").uid.value
-    print "succ de 03:" + node6.lookup("3").uid.value
-    print "succ de 03:" + node7.lookup("3").uid.value
-    print "succ de 03:" + node0.lookup("3").uid.value
-
 
