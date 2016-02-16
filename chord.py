@@ -1,5 +1,6 @@
 import logging
 import hashlib
+from simplejson import dumps, loads
 
 
 class Key(object):
@@ -121,6 +122,9 @@ class Node(object):
 
         self.log.debug("node creation: uid={};".format(self.uid.value))
 
+    def __repr__(self):
+        return repr(self.uid)
+
     def initfinger(self):
         for i in range(0, self.uid.idlength):
             self.finger.append(None)
@@ -158,11 +162,16 @@ class Node(object):
     def updatefinger(self, newnode, firstnode):
         '''
         UPdate finger table for all ring
+        finger is an array of dict {resp, key}
+            `resp` is the Node responsible for `key`
         @param newnode: new node which imply this update
         @param firstnode: node which launch the update
         '''
         for i in range(0, self.uid.idlength):
-            self.finger[i] = self.lookupfinger(i, self.uid.idlength, useOnlySucc=True)
+            fingerkey = self.calcfinger(i, self.uid.idlength)
+            resp = self.lookup(fingerkey, useOnlySucc=True)
+            self.finger[i] = {"resp": resp, "key": fingerkey}
+            #self.finger[i] = self.lookupfinger(i, self.uid.idlength, useOnlySucc=True)
         if firstnode is not self.successor:
             self.successor.updatefinger(newnode, firstnode)
 
@@ -196,10 +205,11 @@ class Node(object):
             return self.successor.lookup(key, useOnlySucc)
         else:
             # Use finger table to optim lookup
-            if key > self.finger[self.uid.idlength - 1]:
-                return self.finger[self.uid.idlength - 1].lookup(key, useOnlySucc)
+            if key > self.finger[self.uid.idlength - 1]["resp"]:
+                return self.finger[self.uid.idlength - 1]["resp"].lookup(key, useOnlySucc)
             else:
                 # self knows the answer because key < (self finger max)
+
                 pass
                 self.log.error("no way")
 
@@ -212,10 +222,11 @@ class Node(object):
 
     def printFingers(self):
         for n, f in enumerate(self.finger):
-            self.log.debug("TABLE:    finger{}: {}".format(n, f.uid))
-            self.log.debug("COMPUTED: finger{}: {}".format(n, self.lookupfinger(n, self.uid.idlength, useOnlySucc=True).uid))
-            if f.uid.value != self.lookupfinger(n, self.uid.idlength, useOnlySucc=True).uid.value:
-                self.log.error("error")
+            self.log.debug("TABLE:    finger{0}:"
+                "\n\rkey:    {2}\n\rresp:   {1}"
+                .format(n, f["resp"].uid.value, f["key"]))
+            if f["resp"].uid.value != self.lookupfinger(n, self.uid.idlength, useOnlySucc=True).uid.value:
+                self.log.error("error between finger table and computed value")
 
     def printRing(self):
         succ = self.successor
