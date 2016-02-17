@@ -56,8 +56,8 @@ if __name__ == "__main__":
     print "succ de 03:" + node4.lookup("3", True).uid.value
     print "succ de 03:" + node5.lookup("3", True).uid.value
     print "succ de 03:" + node6.lookup("3", True).uid.value
-    print "succ de 03:" + node7.lookup("3", True).uid.value
-    print "succ de 03:" + node0.lookup("3", True).uid.value
+    print "succ de 03:" + node7.lookup("3", False).uid.value
+    print "succ de 03:" + node0.lookup("3", False).uid.value
 
 
 

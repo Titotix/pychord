@@ -2,6 +2,8 @@ import logging
 import hashlib
 from simplejson import dumps, loads
 
+def iseven(value):
+    return value % 2 == 0
 
 class Key(object):
 
@@ -11,6 +13,46 @@ class Key(object):
 
     def __repr__(self):
         return self.value[:7]
+
+    def __gt__(self, value):
+        if isinstance(value, str):
+            return self.value > value
+        elif isinstance(value,  Key):
+            return  self.value > value.value
+        else:
+            raise TypeError("__gt__ only supports str or Key as input")
+
+    def __ge__(self, value):
+        if isinstance(value, str):
+            return self.value >= value
+        elif isinstance(value,  Key):
+            return  self.value >= value.value
+        else:
+            raise TypeError("__gt__ only supports str or Key as input")
+
+    def __lt__(self, value):
+        if isinstance(value, str):
+            return self.value < value
+        elif isinstance(value,  Key):
+            return  self.value < value.value
+        else:
+            raise TypeError("__lt__ only supports str or Key as input")
+
+    def __le__(self, value):
+        if isinstance(value, str):
+            return self.value >= value
+        elif isinstance(value,  Key):
+            return  self.value >= value.value
+        else:
+            raise TypeError("__gt__ only supports str or Key as input")
+
+    def __eq__(self, value):
+        if isinstance(value, str):
+            return self.value == value
+        elif isinstance(value,  Key):
+            return  self.value == value.value
+        else:
+            raise TypeError("__eq__ only supports str or Key as input")
 
     def canonicalize(self, value):
         '''
@@ -161,7 +203,7 @@ class Node(object):
 
     def updatefinger(self, newnode, firstnode):
         '''
-        UPdate finger table for all ring
+        UPdate finger table for all ring in a clockwise around successor fashion
         finger is an array of dict {resp, key}
             `resp` is the Node responsible for `key`
         @param newnode: new node which imply this update
@@ -170,7 +212,7 @@ class Node(object):
         for i in range(0, self.uid.idlength):
             fingerkey = self.calcfinger(i, self.uid.idlength)
             resp = self.lookup(fingerkey, useOnlySucc=True)
-            self.finger[i] = {"resp": resp, "key": fingerkey}
+            self.finger[i] = {"resp": resp, "key": Key(fingerkey)}
             #self.finger[i] = self.lookupfinger(i, self.uid.idlength, useOnlySucc=True)
         if firstnode is not self.successor:
             self.successor.updatefinger(newnode, firstnode)
@@ -205,14 +247,42 @@ class Node(object):
             return self.successor.lookup(key, useOnlySucc)
         else:
             # Use finger table to optim lookup
-            if key > self.finger[self.uid.idlength - 1]["resp"]:
+            if key > self.finger[self.uid.idlength - 1]["resp"].uid:
                 return self.finger[self.uid.idlength - 1]["resp"].lookup(key, useOnlySucc)
             else:
                 # self knows the answer because key < (self finger max)
+                nfinger = self.uid.idlength
+ 
+                if nfinger == 1:
+                    self.log.error("nfinger equal 1")
+                if nfinger % 2 != 0:
+                    self.log.error("nfinger is not a multiple for 2")
+                    dicotomy = (nfinger  + 1) / 2
+                else:
+                    dicotomy = nfinger / 2
 
-                pass
-                self.log.error("no way")
+                self.log.debug("dicotomy == {}".format(dicotomy))
+                # TODO : need a getmiddle(key, key) method
+                # dicotomy algo needs memory of previous stage !
+                while True:
+                    if key >= self.finger[dicotomy]["key"]:
+                        if key < self.finger[dicotomy]["resp"].uid:
+                            self.log.debug("Assigns {} as succ for {}"
+                                    .format(self.finger[dicotomy]["resp"], key))
+                            return self.finger[dicotomy]["resp"]
 
+                        dicotomy += (dicotomy / 2)
+                        if not iseven(dicotomy):
+                            self.log.error("Not even")
+                            break
+                        self.log.debug("dicotomy == {}".format(dicotomy))
+                    else:
+                        dicotomy /= 2
+                        if not iseven(dicotomy):
+                            self.log.error("Not even")
+                            break
+                        self.log.debug("dicotomy == {}".format(dicotomy))
+                
     def calcfinger(self, k, m):
         '''
         Returns computed key for finger k while ring is module 2^m
