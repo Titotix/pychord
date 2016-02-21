@@ -54,6 +54,14 @@ class Key(object):
         else:
             raise TypeError("__eq__ only supports str or Key as input")
 
+    def __ne__(self, value):
+        if isinstance(value, str):
+            return self.value != value
+        elif isinstance(value,  Key):
+            return  self.value != value.value
+        else:
+            raise TypeError("__ne__ only supports str or Key as input")
+
     def canonicalize(self, value):
         '''
         Returns the str repr of hexa value with the right number of hexa char
