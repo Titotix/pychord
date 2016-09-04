@@ -308,11 +308,11 @@ class Node(object):
 
     def printRing(self):
         succ = self.successor
-        self.log.debug("Ring")
-        self.log.debug(self.uid.value)
-        key = self.successor.uid.value
-        while key != self.uid.value:
-            self.log.debug(key)
+        output = "Ring from {}]:\n".format(self.uid.value)
+        key = self.successor.uid
+        while key != self.uid:
+            output += repr(key) + " -> "
             succ = succ.successor
-            key = succ.uid.value
+            key = succ.uid
+        self.log.debug(output)
 
