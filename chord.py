@@ -12,7 +12,7 @@ class Key(object):
         self.idlength = 256
 
     def __repr__(self):
-        return self.value[:7]
+        return self.value[:9]
 
     def __gt__(self, value):
         if isinstance(value, str):
@@ -162,7 +162,7 @@ class Node(object):
         self.initfinger()
 
         # self.logging
-        self.log = logging.getLogger(self.uid.value[:5])
+        self.log = logging.getLogger(repr(self.uid))
         self.log.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
