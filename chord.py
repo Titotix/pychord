@@ -120,11 +120,13 @@ class Key(object):
         res = (int(self.value, 16) - int(value, 16)) % pow(2, self.idlength)
         return self.canonicalize(res)
 
+    def __len__(self):
+        return len(self.value)
     
     # TODO optim : each isbetween call will be a RPC, sad if we locally know the value of remote node ?
     def isbetween(self, limit1, limit2):
         '''
-        Returns True if self.value is inside [limit1,  limit2]
+        Returns True if self.value is contained by [limit1,  limit2]
         Raise exception if limit1 == limit2
         '''
         if len(self.value) != len(limit1) != len(limit2):
@@ -218,20 +220,20 @@ class Node(object):
         @param firstnode: node which launch the update
         '''
         for i in range(0, self.uid.idlength):
-            fingerkey = self.calcfinger(i, self.uid.idlength)
+            fingerkey = self.calcfinger(i)
             resp = self.lookup(fingerkey, useOnlySucc=True)
             self.finger[i] = {"resp": resp, "key": Key(fingerkey)}
-            #self.finger[i] = self.lookupfinger(i, self.uid.idlength, useOnlySucc=True)
+            #self.finger[i] = self.lookupfinger(i, useOnlySucc=True)
         if firstnode is not self.successor:
             self.successor.updatefinger(newnode, firstnode)
 
-    def lookupfinger(self, k, m, useOnlySucc=False):
+    def lookupfinger(self, k, useOnlySucc=False):
         '''
         Returns the node responsible for finger k
         @param m: Id length of the ring. (m = Key.idlength)
             Ring is constituted of 2^m nodes maximum
         '''
-        return self.lookup(self.calcfinger(k, m), useOnlySucc)
+        return self.lookup(self.calcfinger(k), useOnlySucc)
 
             
     def lookup(self, key, useOnlySucc=False):
@@ -291,9 +293,9 @@ class Node(object):
                             break
                         self.log.debug("dicotomy == {}".format(dicotomy))
                 
-    def calcfinger(self, k, m):
+    def calcfinger(self, k):
         '''
-        Returns computed key for finger k while ring is module 2^m
+        Returns computed key for finger k
         @param k: from 0 to (m - 1)
         '''
         return self.uid + pow(2, k)
@@ -303,7 +305,7 @@ class Node(object):
             self.log.debug("TABLE:    finger{0}:"
                 "\n\rkey:    {2}\n\rresp:   {1}"
                 .format(n, f["resp"].uid.value, f["key"]))
-            if f["resp"].uid.value != self.lookupfinger(n, self.uid.idlength, useOnlySucc=True).uid.value:
+            if f["resp"].uid.value != self.lookupfinger(n, useOnlySucc=True).uid.value:
                 self.log.error("error between finger table and computed value")
 
     def printRing(self):
