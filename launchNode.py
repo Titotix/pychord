@@ -2,9 +2,45 @@ import argparse
 from chord import Node, Key, Uid
 
 
+class Ring():
+
+    def __init__(self, nbNode):
+        self.nbNode = nbNode
+
+    def createLocalRing(self):
+        ip = "127.0.0.1"
+        self.nodes = []
+        for n, node in enumerate(range(0, self.nbNode)):
+            self.nodes.append(Node(ip, repr(n)))
+
+        # TODO IMPROVE: Randomize which node add the new one
+        for node in self.nodes:
+            if node is not self.nodes[0]:
+                self.nodes[0].addToRing(node)
+        return self.nodes
+
+    def printRings(self):
+        for node in self.nodes:
+            node.printRing()
+
+    def printFingers(self):
+        for node in self.nodes:
+            node.printFingers()
+
+    def lookupNode(self, fromNode, key):
+        successorFound = fromNode.lookup(key, False)
+        fromNode.log.debug(
+            "succ de {key} is {successorFound}"
+            .format(key=key,
+                    successorFound=successorFound.uid)
+        )
+    def lookupFromAllNode(self, key):
+        for node in self.nodes:
+            self.lookupNode(node, key)
+
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Create a node")
+    parser = argparse.ArgumentParser(description="Create a ring")
 
     parser.add_argument("-m", "--main", action="store_true",
             help="Define the created node as a central one :"
@@ -16,48 +52,11 @@ if __name__ == "__main__":
     ip = args.address
     port = args.port
 
-    ip = "127.0.0.1"
-    node0 = Node(ip, "0")
-    node1 = Node(ip, "1")
-    node2 = Node(ip, "2")
-    node3 = Node(ip, "3")
-    node4 = Node(ip, "4")
-    node5 = Node(ip, "5")
-    node6 = Node(ip, "6")
-    node7 = Node(ip, "7")
 
-    node0.addToRing(node1)
-    node1.addToRing(node2)
-    node1.addToRing(node3)
-    node3.addToRing(node4)
-    node3.addToRing(node5)
-    node5.addToRing(node6)
-    node1.addToRing(node7)
-    
-    node0.printRing()
-    node1.printRing()
-    node2.printRing()
-    node3.printRing()
-    node4.printRing()
-    node5.printRing()
-    node6.printRing()
-    node7.printRing()
+    print("########\n## DEBUG RING\n#########\n\n")
+    ring = Ring(10)
+    ring.createLocalRing()
+    ring.printRings()
 
-    node0.printFingers()
-    node1.printFingers()
-    node2.printFingers()
-    node3.printFingers()
-    node4.printFingers()
-    node5.printFingers()
-    node6.printFingers()
-    node7.printFingers()
-    print "succ de 03:" + node2.lookup("3", True).uid.value
-    print "succ de 03:" + node3.lookup("3", True).uid.value
-    print "succ de 03:" + node4.lookup("3", True).uid.value
-    print "succ de 03:" + node5.lookup("3", True).uid.value
-    print "succ de 03:" + node6.lookup("3", True).uid.value
-    print "succ de 03:" + node7.lookup("3", False).uid.value
-    print "succ de 03:" + node0.lookup("3", False).uid.value
-
-
+    ring.lookupFromAllNode("3")
 
