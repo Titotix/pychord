@@ -57,6 +57,7 @@ if __name__ == "__main__":
     ring = Ring(10)
     ring.createLocalRing()
     ring.printRings()
-
+    ring.nodes[8].printFingers()
+    
     ring.lookupFromAllNode("3")
 

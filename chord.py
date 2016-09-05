@@ -302,9 +302,9 @@ class Node(object):
 
     def printFingers(self):
         for n, f in enumerate(self.finger):
-            self.log.debug("TABLE:    finger{0}:"
-                "\n\rkey:    {2}\n\rresp:   {1}"
-                .format(n, f["resp"].uid.value, f["key"]))
+            self.log.debug("TABLE: finger{0} : "
+                "- key: {2} - resp: {1}"
+                .format(n, f["resp"].uid, f["key"]))
             if f["resp"].uid.value != self.lookupfinger(n, useOnlySucc=True).uid.value:
                 self.log.error("error between finger table and computed value")
 
