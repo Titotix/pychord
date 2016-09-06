@@ -1,4 +1,5 @@
 import logging
+import sys
 import hashlib
 from simplejson import dumps, loads
 
@@ -166,7 +167,7 @@ class Node(object):
         # self.logging
         self.log = logging.getLogger(repr(self.uid))
         self.log.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler()
+        ch = logging.StreamHandler(sys.stdout)
         ch.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
         ch.setFormatter(formatter)
@@ -238,35 +239,6 @@ class Node(object):
             
     def lookup(self, key, useOnlySucc=False):
         
-        def getNextDichotomy(prevDichotomy, dichotomy, sign):
-            fingmax = self.uid.idlength - 1
-            fingmin = 0
-            if prevDichotomy == dichotomy:
-                raise ValueError("prevDichotomy & dichotomy are eq")
-            if sign not in ["+", "-"]:
-                raise Exception("getNetxtDichotomy used with invalid sign")
-            elif sign is "+":
-                if prevDichotomy < dichotomy:
-                    #if abs(prevDichotomy - dichotomy) == 1:
-                    #    return dichotomy + 1
-                    #else:
-                    return dichotomy + ((nfinger - dichotomy) / 2)
-                else:
-                    #if abs(prevDichotomy - dichotomy) == 1:
-                    #    return prevDichotomy + 1
-                    #else:
-                    return dichotomy + ((prevDichotomy - dichotomy) / 2)
-            elif sign is "-":
-                if prevDichotomy < dichotomy:
-                    #if abs(prevDichotomy - dichotomy) == 1:
-                    #    return prevDichotomy
-                    #else:
-                    return dichotomy - ((dichotomy - prevDichotomy) / 2)
-                else:
-                    if abs(prevDichotomy, dichotomy) == 1:
-                        return dichotomy 
-                    return dichotomy - ((dichotomy - 1)/ 2)
-
         if isinstance(key, Node):
             key = node.uid
         elif isinstance(key, Key):
@@ -276,10 +248,28 @@ class Node(object):
         else:
             raise Exception
 
+        def getNextDichotomy(prevDichotomy, dichotomy, sign):
+            fingmax = self.uid.idlength - 1
+            fingmin = 0
+            if prevDichotomy == dichotomy:
+                raise ValueError("prevDichotomy & dichotomy are eq")
+            if sign not in ["+", "-"]:
+                raise Exception("getNetxtDichotomy used with invalid sign")
+            elif sign is "+":
+                if prevDichotomy < dichotomy:
+                    return dichotomy + ((nfinger - dichotomy) / 2)
+                else:
+                    return dichotomy + ((prevDichotomy - dichotomy) / 2)
+            elif sign is "-":
+                if prevDichotomy < dichotomy:
+                    return dichotomy - ((dichotomy - prevDichotomy) / 2)
+                else:
+                    return dichotomy - (dichotomy / 2)
+
         # lookup on successor and then ask to the successor
         if useOnlySucc:
             # Self is successor ?
-            if self.uid.value == key.value:
+            if self.uid == key:
                 return self
             # Is self.successor the successor of key ? 
             if key.isbetween(self.uid.value, self.successor.uid.value):
@@ -300,10 +290,11 @@ class Node(object):
                 self.log.debug("lookup recurse to node {}".format(self.finger[fingmax]["resp"]))
                 return self.finger[fingmax]["resp"].lookup(key, useOnlySucc)
 
-            self.log.debug("key={}; finger(255)[resp]={}; finger(0)(key)={}"
+            self.log.debug("key={}; finger(255)[resp]={}; finger(0)(key)={}\nfinger(255)(key)={}"
                            .format(key,
                                    Key(self.finger[fingmax]["resp"].uid + 1),
-                                   Key(self.finger[0]["key"] - 1))
+                                   Key(self.finger[0]["key"] - 1),
+                                   self.finger[255]["key"])
                           )
             # self knows the answer because key < (self finger max)
 
@@ -313,23 +304,37 @@ class Node(object):
             while True:
 
                 # finger(0) <= key < finger(dichotomy)
-                if key.isbetween(self.finger[0]["key"] + 1,
+                # finger(dichotomy)[key] <= key <= finger(dichotomy)[resp]
+                if key.isbetween(self.finger[dichotomy]["key"],
+                                   self.finger[dichotomy]["resp"].uid.value):
+                    self.log.debug("Assigns {} as succ for {}"
+                            .format(self.finger[dichotomy]["resp"], key))
+                    return self.finger[dichotomy]["resp"]
+                    
+                elif key.isbetween(self.finger[0]["key"] + 1,
                                  self.finger[dichotomy]["key"] - 1):
                     self.log.debug("key down to dichotomy: dichotomy:{} -"
                                    "prevDichotomy:{} -"
-                                   "finger-dicho)={} -"
+                                   "finger-dicho)(res)={} -"
+                                   "finger-dicho)(key)={} -"
                                    "finger(0)[keyt]={}"
                                    .format(dichotomy,
                                            prevDichotomy,
                                            self.finger[dichotomy]["resp"],
+                                           self.finger[dichotomy]["key"],
                                            self.finger[0]["key"]))
+
+                    if self.finger[dichotomy - 1]["resp"] != self.finger[dichotomy]["resp"]:
+                        if key.isbetween(self.finger[dichotomy - 1]["resp"].uid + 1,
+                                       self.finger[dichotomy]["key"] - 1):
+                            return self.finger[dichotomy - 1]["resp"].lookup(key, useOnlySucc)
                     try:
                         dichotomy_tmp = getNextDichotomy(prevDichotomy,
                                                          dichotomy,
                                                          "-")
                     except ValueError as e:
                         self.log.error(e)
-                        break
+                        raise
                     prevDichotomy = dichotomy
                     dichotomy = dichotomy_tmp
 
@@ -339,46 +344,42 @@ class Node(object):
                     self.log.debug("UP to dichotomy: dichotomy:{} -"
                                    "prevDichotomy:{} -"
                                    "finger-dicho(resp)={} -"
-                                   "finger(0)[key]={}"
+                                   "finger(0)[key]={} - "
+                                   "finger(dichotomy-1)[resp]={} -"
+                                   "finger(dicho)[key]={}"
                                    .format(dichotomy,
                                            prevDichotomy,
                                            self.finger[dichotomy]["resp"],
-                                           self.finger[0]["key"]))
+                                           self.finger[0]["key"],
+                                           self.finger[dichotomy - 1]["resp"].uid,
+                                           self.finger[dichotomy]["key"],
+                                           ))
 
-                    if key.isbetween(self.finger[dichotomy + 1]["key"],
-                                     self.finger[dichotomy + 1]["resp"].uid.value):
-                        self.log.debug("Assigns {} as succ for {}"
-                            .format(self.finger[dichotomy + 1]["resp"], key))
-                        return self.finger[dichotomy + 1]["resp"]
+                    # if finger dicho and next finger does not have same responsible
+                    # it means there is a room for unreferenced node in self fingers
+                    # if looked up key is in this room, we have to ask to the finger dichotomy
+                    # to lookup for self, as self does not know the answer
+                    if self.finger[dichotomy + 1]["resp"] != self.finger[dichotomy]["resp"]:
+                        # test if key is in this room
+                        # between the finger dichotomy responsible & the next finger key
+                        if key.isbetween(self.finger[dichotomy]["resp"].uid + 1,
+                                         self.finger[dichotomy + 1]["key"] - 1):
+                            # let's ask to self.finger[dichotomy]
+                            return self.finger[dichotomy]["resp"].lookup(key, useOnlySucc)
                     try:
                         dichotomy_tmp = getNextDichotomy(prevDichotomy,
                                                          dichotomy,
                                                          "+")
                     except ValueError as e:
                         self.log.error(e)
-                        break
+                        raise
 
                     prevDichotomy = dichotomy
                     dichotomy = dichotomy_tmp
 
-                # finger(dichotomy)[key] <= key <= finger(dichotomy)[resp]
-                elif key.isbetween(self.finger[dichotomy]["key"],
-                                   self.finger[dichotomy]["resp"].uid.value):
-                    #self.log.debug("dichotomy:{} - prevDichotomy:{} - fing(dichotomy)={}"
-                    #               .format(dichotomy,
-                    #                       prevDichotomy,
-                    #                       self.finger[dichotomy]["resp"]))
-                    self.log.debug("Assigns {} as succ for {}"
-                            .format(self.finger[dichotomy]["resp"], key))
-                    return self.finger[dichotomy]["resp"]
-                 #elif key is self.finger[0]["resp"].uid:
-                 #    return 
-                    
                 else:
                     self.log.error("OUT OF TOWN")
-                    break
-        self.log.error("error assignement false")
-        return self
+                    raise IndexError("lookup failed on properly catching the inclusion of the key.")
 
                 
     def calcfinger(self, k):

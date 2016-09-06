@@ -54,10 +54,13 @@ if __name__ == "__main__":
 
 
     print("########\n## DEBUG RING\n#########\n\n")
-    ring = Ring(10)
+    ring = Ring(30)
     ring.createLocalRing()
     ring.printRings()
-    ring.nodes[8].printFingers()
+    #ring.nodes[8].printFingers()
+
     
     ring.lookupFromAllNode("3")
-
+    # ring.printFingers()
+    print ring.nodes[4].uid.value
+    ring.lookupNode(ring.nodes[20], "06afea600ce9f70618c74331ee6aeec2c61a73be802dfbafee3d0025307ace69")
