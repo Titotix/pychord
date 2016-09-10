@@ -1,5 +1,6 @@
 import argparse
-from chord import Node, Key, Uid
+from chord import Node
+from key import Key, Uid
 
 
 class Ring():
@@ -11,7 +12,7 @@ class Ring():
         ip = "127.0.0.1"
         self.nodes = []
         for n, node in enumerate(range(0, self.nbNode)):
-            self.nodes.append(Node(ip, repr(n)))
+            self.nodes.append(Node(ip, int(n + 2000)))
 
         # TODO IMPROVE: Randomize which node add the new one
         for node in self.nodes:
@@ -56,11 +57,25 @@ if __name__ == "__main__":
     print("########\n## DEBUG RING\n#########\n\n")
     ring = Ring(30)
     ring.createLocalRing()
-    ring.printRings()
+    from xmlrpclib import ServerProxy, Error
+
+    # server = ServerProxy("http://localhost:8000") # local server
+    res = ring.nodes[1].lookup("3")
+    server = ServerProxy("http://localhost:2001")
+    print "\n####"
+    print res
+
+    print server
+
+    try:
+        print server.lookup("3")
+    except Error as v:
+        print "ERROR", v
+    #ring.printRings()
     #ring.nodes[8].printFingers()
 
     
-    ring.lookupFromAllNode("3")
+    #ring.lookupFromAllNode("3")
     # ring.printFingers()
-    print ring.nodes[4].uid.value
-    ring.lookupNode(ring.nodes[20], "06afea600ce9f70618c74331ee6aeec2c61a73be802dfbafee3d0025307ace69")
+    #print ring.nodes[4].uid.value
+    #ring.lookupNode(ring.nodes[20], "06afea600ce9f70618c74331ee6aeec2c61a73be802dfbafee3d0025307ace69")
