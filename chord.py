@@ -1,8 +1,7 @@
 import logging
 import sys
 import threading
-from simplejson import dumps, loads
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCServer
 
 from key import Key, Uid
 
@@ -132,14 +131,14 @@ class Node(object):
                 raise Exception("getNetxtDichotomy used with invalid sign")
             elif sign is "+":
                 if prevDichotomy < dichotomy:
-                    return dichotomy + ((nfinger - dichotomy) / 2)
+                    return dichotomy + ((nfinger - dichotomy) // 2)
                 else:
-                    return dichotomy + ((prevDichotomy - dichotomy) / 2)
+                    return dichotomy + ((prevDichotomy - dichotomy) // 2)
             elif sign is "-":
                 if prevDichotomy < dichotomy:
-                    return dichotomy - ((dichotomy - prevDichotomy) / 2)
+                    return dichotomy - ((dichotomy - prevDichotomy) // 2)
                 else:
-                    return dichotomy - (dichotomy / 2)
+                    return dichotomy - (dichotomy // 2)
 
         # lookup on successor and then ask to the successor
         if useOnlySucc:
@@ -173,7 +172,7 @@ class Node(object):
                           )
             # self knows the answer because key < (self finger max)
 
-            dichotomy = nfinger / 2
+            dichotomy = nfinger // 2
             prevDichotomy = 0
             # algorithm by dichotomy
             while True:

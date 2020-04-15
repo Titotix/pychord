@@ -57,20 +57,20 @@ if __name__ == "__main__":
     print("########\n## DEBUG RING\n#########\n\n")
     ring = Ring(30)
     ring.createLocalRing()
-    from xmlrpclib import ServerProxy, Error
+    from xmlrpc.client import ServerProxy, Error
 
     # server = ServerProxy("http://localhost:8000") # local server
     res = ring.nodes[1].lookup("3")
     server = ServerProxy("http://localhost:2001")
-    print "\n####"
-    print res
+    print("\n####")
+    print(res)
 
-    print server
+    print(server)
 
     try:
-        print server.lookup("3")
+        print(server.lookup("3"))
     except Error as v:
-        print "ERROR", v
+        print("ERROR", v)
     #ring.printRings()
     #ring.nodes[8].printFingers()
 

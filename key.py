@@ -62,10 +62,10 @@ class Key(object):
         Returns the str repr of hexa value with the right number of hexa char
         Basically padd the input with'0' and get rid of '0x' and 'L'
         '''
-        return format(value, '0>{}x'.format(self.idlength/4))
+        return format(value, '0>{}x'.format(self.idlength//4))
         
     def __add__(self, value):
-        if isinstance(value, int) or isinstance(value, long):
+        if isinstance(value, int):
             return self.sumint(value)
         elif isinstance(value, str):
             return self.sumhex(value)
@@ -73,7 +73,7 @@ class Key(object):
             return self.sumhex(value.value)
         else:
             #self.log.error("Sum with unknow type")
-            print type(value)
+            print(type(value))
             raise TypeError
     
     def sumint(self, value):
@@ -147,5 +147,5 @@ class Key(object):
 class Uid(Key):
     
     def __init__(self, strtohash):
-        hash = hashlib.sha256(strtohash)
+        hash = hashlib.sha256(strtohash.encode("utf-8"))
         Key.__init__(self, hash.hexdigest())
