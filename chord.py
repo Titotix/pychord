@@ -10,19 +10,19 @@ def iseven(value):
 
 
 # perhaps inherit from Node ? #TODO
-class ThreadServerRPC(threading.Thread):
-    def __init__(self, node):
-        threading.Thread.__init__(self)
-        self.node = node
-        self.simplexmlrpcserver = SimpleXMLRPCServer((self.node.ip, self.node.port),
-                                                     allow_none=True)
-        self.simplexmlrpcserver.register_instance(self.node)
-
-        # if daemon si True, threadd will exit with launcher THread, main one for now
-        self.daemon = True
-
-    def run(self):
-        self.simplexmlrpcserver.serve_forever()
+#class ThreadServerRPC(threading.Thread):
+#    def __init__(self, node):
+#        threading.Thread.__init__(self)
+#        self.node = node
+#        self.simplexmlrpcserver = SimpleXMLRPCServer((self.node.ip, self.node.port),
+#                                                     allow_none=True)
+#        self.simplexmlrpcserver.register_instance(self.node)
+#
+#        # if daemon si True, threadd will exit with launcher THread, main one for now
+#        self.daemon = True
+#
+#    def run(self):
+#        self.simplexmlrpcserver.serve_forever()
 
 class Node(object):
     def __init__(self, ip, port):
@@ -46,7 +46,7 @@ class Node(object):
         #self.threadserverrpc = ThreadServerRPC(self)
         #self.threadserverrpc.start()
         # WIP
-        ThreadServerRPC(self).start()
+        # ThreadServerRPC(self).start()
         self.log.debug("node creation: uid={}".format(self.uid.value))
 
     def __repr__(self):
