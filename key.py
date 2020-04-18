@@ -6,6 +6,12 @@ class Key(object):
         self.value = value
         self.idlength = 256
 
+    def setValue(self, newValue):
+        if isinstance(newValue, str) and len(newValue) == self.idlength//4:
+            self.value = newValue
+        else:
+            raise ValueError
+
     def __repr__(self):
         return self.value[:9]
 
