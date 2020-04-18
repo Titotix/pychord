@@ -81,9 +81,9 @@ class Key(object):
         if isinstance(value, int):
             return self.sumint(value)
         elif isinstance(value, str):
-            return self.sumhex(value)
+            return self.sumint(int(value, 16))
         elif isinstance(value, Key):
-            return self.sumhex(value.value)
+            return self.sumint(int(value.value, 16))
         else:
             #self.log.error("Sum with unknow type")
             print(type(value))
@@ -97,17 +97,13 @@ class Key(object):
         res = (int(self.value, 16) + value) % pow(2, self.idlength)
         return self.canonicalize(res)
 
-    def sumhex(self, value):
-        res = (int(self.value, 16) + int(value, 16)) % pow(2, self.idlength)
-        return self.canonicalize(res)
-
     def __sub__(self, value):
         if isinstance(value, int):
             return self.subint(value)
         elif isinstance(value, str):
-            return self.subhex(value)
+            return self.subint(int(value, 16))
         elif isinstance(value, Key):
-            return self.subhex(value.value)
+            return self.subint(int(value.value, 16))
         else:
             #self.log.error("Sub with unknow type")
             raise TypeError
@@ -118,14 +114,6 @@ class Key(object):
         @param value: int to sub with uid value
         '''
         res = (int(self.value, 16) - value) % pow(2, self.idlength)
-        return self.canonicalize(res)
-
-    def subhex(self, value):
-        '''
-        Return sub uid - value in hexa representation
-        @param value: str repr of hexa number
-        '''
-        res = (int(self.value, 16) - int(value, 16)) % pow(2, self.idlength)
         return self.canonicalize(res)
 
     def __len__(self):
