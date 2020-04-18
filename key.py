@@ -11,49 +11,56 @@ class Key(object):
 
     def __gt__(self, value):
         if isinstance(value, str):
-            return self.value > value
+            return int(self.value, 16) > int(value, 16)
         elif isinstance(value,  Key):
-            return  self.value > value.value
+            return int(self.value, 16) > int(value.value, 16)
+        elif isinstance(value, int):
+            return int(self.value, 16) > value
         else:
-            raise TypeError("__gt__ only supports str or Key as input")
+            raise TypeError("__gt__ only supports str, int or Key as input")
 
     def __ge__(self, value):
         if isinstance(value, str):
-            return self.value >= value
+            return int(self.value, 16) >= int(value, 16)
         elif isinstance(value,  Key):
-            return  self.value >= value.value
+            return int(self.value, 16) >= int(value.value, 16)
+        #TODO implem for int
         else:
-            raise TypeError("__gt__ only supports str or Key as input")
+            raise TypeError("__ge__ only supports str or Key as input")
 
     def __lt__(self, value):
         if isinstance(value, str):
-            return self.value < value
+            return int(self.value, 16)  < int(value, 16) 
         elif isinstance(value,  Key):
-            return  self.value < value.value
+            return int(self.value, 16) < int(value.value, 16)
+        #TODO implem for int
         else:
             raise TypeError("__lt__ only supports str or Key as input")
 
     def __le__(self, value):
         if isinstance(value, str):
-            return self.value >= value
+            return int(self.value, 16) <= int(value, 16)
         elif isinstance(value,  Key):
-            return  self.value >= value.value
+            return int(self.value, 16) <= int(value.value, 16)
+        #TODO implem for int
         else:
-            raise TypeError("__gt__ only supports str or Key as input")
+            raise TypeError("__le__ only supports str or Key as input")
 
     def __eq__(self, value):
         if isinstance(value, str):
-            return self.value == value
+            return int(self.value, 16) == int(value, 16)
         elif isinstance(value,  Key):
-            return  self.value == value.value
+            return int(self.value, 16) == int(value.value, 16)
+        #TODO implem for int
         else:
             raise TypeError("__eq__ only supports str or Key as input")
 
     def __ne__(self, value):
         if isinstance(value, str):
-            return self.value != value
+            return int(self.value, 16) != int(value, 16)
         elif isinstance(value,  Key):
-            return  self.value != value.value
+            return int(self.value, 16) != int(value.value, 16)
+        #TODO implem for int
         else:
             raise TypeError("__ne__ only supports str or Key as input")
 
