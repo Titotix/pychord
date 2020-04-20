@@ -5,7 +5,7 @@ import hashlib
 def getSha256Str(strtohash):
     hashlib.sha256(strtohash).encode("utf-8").hexdigest()
 
-class UidValueComparisonTest(unittest.TestCase):
+class NodeUidTest(unittest.TestCase):
     def setUp(self):
         self.ip = "127.0.0.1"
         self.port = 2000
@@ -17,14 +17,26 @@ class UidValueComparisonTest(unittest.TestCase):
                 ip=self.ip,\
                 port=self.port).encode("utf-8")).hexdigest()
         )
+
     def test_uid_value_length(self):
         self.assertEqual(len(self.node.uid.value), 64)
 
     def test_uid_type(self):
         self.assertIsInstance(self.node.uid, chord.Uid)
 
-    # Test overwritten builtin comparison for chord.Key type
-    # Function name format : test_<function_tested>_<type_of_arg>
+class KeyTest(unittest.TestCase):
+    """
+    Test overwritten builtin comparison for chord.Key type
+    Function name format : test_<function_tested>_<type_of_arg>
+    """
+    def setUp(self):
+        self.ip = "127.0.0.1"
+        self.port = 2000
+        # while instantiate a node we get a chord.Uid() (node.uid)
+        # which is a subclass of chord.Key
+        # we gonna use self.node.uid to test Key features
+        self.node = chord.Node(self.ip, self.port)
+
     def test_lt_str(self):
         #compare to value
         self.assertFalse(
@@ -43,6 +55,7 @@ class UidValueComparisonTest(unittest.TestCase):
         """
         Test __le__() with str arg
         """
+        # compare to value itself
         self.assertTrue(self.node.uid <= "f9b8b725655d34a49328e659985bc43995caeec537f01f6129ce759ccd143119")
         # compared to value +1
         self.assertTrue(self.node.uid <= "f9b8b725655d34a49328e659985bc43995caeec537f01f6129ce759ccd14311a")
@@ -60,6 +73,7 @@ class UidValueOperationTest(unittest.TestCase):
         self.ip = "127.0.0.1"
         self.port = 2000
         self.node = chord.Node(self.ip, self.port)
+
     def test_add_int(self):
         """
         Test __add__() with int arg
@@ -127,7 +141,6 @@ class UidValueOperationTest(unittest.TestCase):
         """
         Test __sub__() with int arg
         
-        Note: Test will failed if self.node.uid.value is '64 * "0"'
         """
         self.node.uid.setValue("1".rjust(64, "0"))
         self.assertEqual(
@@ -137,6 +150,9 @@ class UidValueOperationTest(unittest.TestCase):
         self.assertEqual(len(self.node.uid - int(1)), 64)
 
 class UidIsBetweenTest(unittest.TestCase):
+    """
+    Test isBetwwen method from Key class
+    """
     def setUp(self):
         self.ip = "127.0.0.1"
         self.port = 3000
@@ -167,4 +183,3 @@ class UidIsBetweenTest(unittest.TestCase):
             "0" * 64
             )
         )
-
