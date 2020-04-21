@@ -142,12 +142,12 @@ class Node(object):
                 raise ValueError("prevDichotomy & dichotomy are eq")
             if sign not in ["+", "-"]:
                 raise Exception("getNetxtDichotomy used with invalid sign")
-            elif sign is "+":
+            elif sign == "+":
                 if prevDichotomy < dichotomy:
                     return dichotomy + ((nfinger - dichotomy) // 2)
                 else:
                     return dichotomy + ((prevDichotomy - dichotomy) // 2)
-            elif sign is "-":
+            elif sign == "-":
                 if prevDichotomy < dichotomy:
                     return dichotomy - ((dichotomy - prevDichotomy) // 2)
                 else:
