@@ -1,7 +1,6 @@
 import logging
 import sys
-import threading
-from xmlrpc.server import SimpleXMLRPCServer
+import serverxmlrpc
 
 from key import Key, Uid
 
@@ -29,6 +28,8 @@ class Node(object):
         self.ip = ip
         self.port = port
         self.uid = Uid(self.ip + ":" + repr(self.port))
+        #TODO definition of successor in chord paper is different than the one I implemented, should be clarify
+        # refer to 4.2 consistent hashing
         self.successor = self
         # TODO create a finger class & integrate
         self.finger = []
@@ -36,7 +37,7 @@ class Node(object):
 
         # self.logging
         self.log = logging.getLogger(repr(self.uid))
-        self.log.setLevel(logging.DEBUG)
+        self.log.setLevel(logging.INFO)
         ch = logging.StreamHandler(sys.stdout)
         ch.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
@@ -48,6 +49,12 @@ class Node(object):
         # WIP
         # ThreadServerRPC(self).start()
         self.log.debug("node creation: uid={}".format(self.uid.value))
+
+        self.server = serverxmlrpc.ChordServerxmlrpc(self)
+        self.server.start()
+
+    def stopXmlRPCServer(self):
+        self.server.stop()
 
     def __repr__(self):
         return "<class Node - {hash}>".format(hash=self.uid)
@@ -112,6 +119,12 @@ class Node(object):
 
             
     def lookup(self, key, useOnlySucc=False):
+        """
+        Lookup method to find the responsive node for a given key
+
+        return a node object
+        
+        """
         
         if isinstance(key, Node):
             key = node.uid
@@ -152,6 +165,7 @@ class Node(object):
             return self.successor.lookup(key, useOnlySucc)
 
         # Use finger table to optim lookup
+        #TODO not working on test done 20-04-2020
         else:
 
             nfinger = self.uid.idlength
