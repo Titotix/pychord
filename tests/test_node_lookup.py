@@ -2,9 +2,10 @@ import unittest
 import chord
 
 class NodeLookupTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.ip = "127.0.0.1"
-        self.port = [2000, 2001, 2002]
+        self.port = [2221, 2222, 2223]
         self.node0 = chord.Node(self.ip, self.port[0])
         self.node1 = chord.Node(self.ip, self.port[1])
         self.node2 = chord.Node(self.ip, self.port[2])
@@ -16,6 +17,12 @@ class NodeLookupTest(unittest.TestCase):
         self.node0.addToRing(self.node1)
         self.node0.addToRing(self.node2)
 
+    @classmethod
+    def tearDownClass(self):
+        self.node0.stopXmlRPCServer()
+        self.node1.stopXmlRPCServer()
+        self.node2.stopXmlRPCServer()
+
     def test_lookup_useOnlySucc(self):
         self.assertTrue(self.node0.lookup("1".zfill(64), useOnlySucc=True) is self.node1)
         self.assertTrue(self.node0.lookup("a"*64, useOnlySucc=True) is self.node0)
@@ -23,26 +30,29 @@ class NodeLookupTest(unittest.TestCase):
         self.assertTrue(self.node2.lookup("a"*64, useOnlySucc=True) is self.node0)
 
 class NodeBasicMethodsTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = [2000, 2001, 2002]
         self.node0 = chord.Node(self.ip, self.port[0])
         
 class NodeaddToRingTest(unittest.TestCase):
+
     def setUp(self):
         self.ip = "127.0.0.1"
-        self.port = [2000, 2001, 2002, 2003, 2004]
+        self.port = [8000, 8001, 8002, 8003, 8004]
         self.node0 = chord.Node(self.ip, self.port[0])
         self.node1 = chord.Node(self.ip, self.port[1])
         self.node2 = chord.Node(self.ip, self.port[2])
-        self.node3 = chord.Node(self.ip, self.port[3])
-        self.node4 = chord.Node(self.ip, self.port[4])
         # For ease of test writing/understanging with set custom uid
         self.node0.uid.setValue("0"*64)
         self.node1.uid.setValue("1"*64)
         self.node2.uid.setValue("2"*64)
-        self.node3.uid.setValue("a"*64)
-        self.node4.uid.setValue("f"*64)
+
+    def tearDown(self):
+        self.node0.stopXmlRPCServer()
+        self.node1.stopXmlRPCServer()
+        self.node2.stopXmlRPCServer()
 
     def test_TwoNodesRing(self):
         """

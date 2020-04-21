@@ -6,10 +6,16 @@ def getSha256Str(strtohash):
     hashlib.sha256(strtohash).encode("utf-8").hexdigest()
 
 class NodeUidTest(unittest.TestCase):
-    def setUp(self):
+
+    @classmethod
+    def setUpClass(self):
         self.ip = "127.0.0.1"
-        self.port = 2000
+        self.port = 6000
         self.node = chord.Node(self.ip, self.port)
+
+    @classmethod
+    def tearDOwnClass(self):
+        self.node.stopXmlRPCServer()
 
     def test_uid_value(self):
         self.assertEqual(self.node.uid.value,\
@@ -29,13 +35,18 @@ class KeyTest(unittest.TestCase):
     Test overwritten builtin comparison for chord.Key type
     Function name format : test_<function_tested>_<type_of_arg>
     """
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = 2000
         # while instantiate a node we get a chord.Uid() (node.uid)
         # which is a subclass of chord.Key
         # we gonna use self.node.uid to test Key features
         self.node = chord.Node(self.ip, self.port)
+
+    @classmethod
+    def tearDownClass(self):
+        self.node.stopXmlRPCServer()
 
     def test_lt_str(self):
         #compare to value
@@ -69,10 +80,15 @@ class KeyTest(unittest.TestCase):
         self.assertFalse(self.node.uid <= (int(self.node.uid.value, 16) - 1))
 
 class UidValueOperationTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.ip = "127.0.0.1"
-        self.port = 2000
+        self.port = 5000
         self.node = chord.Node(self.ip, self.port)
+
+    @classmethod
+    def tearDOwnClass(self):
+        self.node.stopXmlRPCServer()
 
     def test_add_int(self):
         """
@@ -153,10 +169,16 @@ class UidIsBetweenTest(unittest.TestCase):
     """
     Test isBetwwen method from Key class
     """
-    def setUp(self):
+
+    @classmethod
+    def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = 3000
         self.node0 = chord.Node(self.ip, self.port)
+
+    @classmethod
+    def tearDOwnClass(self):
+        self.node0.stopXmlRPCServer()
 
     def test_isbetween(self):
         self.assertTrue(self.node0.uid.isbetween(64*"0", 64*"f"))
