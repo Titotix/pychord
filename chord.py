@@ -1,6 +1,7 @@
 import logging
 import sys
 import serverxmlrpc
+import clientxmlrpc
 
 from key import Key, Uid
 
@@ -39,6 +40,9 @@ class Node(object):
     def initfinger(self):
         for i in range(0, self.uid.idlength):
             self.finger.append(None)
+
+    def getUid(self):
+        return self.uid
 
     def setsuccessor(self, successor):
         self.successor = successor
