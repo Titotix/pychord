@@ -4,25 +4,6 @@ import serverxmlrpc
 
 from key import Key, Uid
 
-def iseven(value):
-    return value % 2 == 0
-
-
-# perhaps inherit from Node ? #TODO
-#class ThreadServerRPC(threading.Thread):
-#    def __init__(self, node):
-#        threading.Thread.__init__(self)
-#        self.node = node
-#        self.simplexmlrpcserver = SimpleXMLRPCServer((self.node.ip, self.node.port),
-#                                                     allow_none=True)
-#        self.simplexmlrpcserver.register_instance(self.node)
-#
-#        # if daemon si True, threadd will exit with launcher THread, main one for now
-#        self.daemon = True
-#
-#    def run(self):
-#        self.simplexmlrpcserver.serve_forever()
-
 class Node(object):
     def __init__(self, ip, port):
         self.ip = ip
@@ -44,10 +25,6 @@ class Node(object):
         ch.setFormatter(formatter)
         self.log.addHandler(ch)
 
-        #self.threadserverrpc = ThreadServerRPC(self)
-        #self.threadserverrpc.start()
-        # WIP
-        # ThreadServerRPC(self).start()
         self.log.debug("node creation: uid={}".format(self.uid.value))
 
         self.server = serverxmlrpc.ChordServerxmlrpc(self)
