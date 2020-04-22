@@ -84,7 +84,7 @@ class Node(object):
         '''
         for i in range(0, self.uid.idlength):
             fingerkey = self.calcfinger(i)
-            resp = self.lookup(fingerkey, useOnlySucc=True)
+            resp = self.lookupWithSucc(fingerkey)
             self.finger[i] = {"resp": resp, "key": Key(fingerkey)}
             #self.finger[i] = self.lookupfinger(i, useOnlySucc=True)
         if firstnode is not self.successor:
@@ -96,16 +96,37 @@ class Node(object):
         @param m: Id length of the ring. (m = Key.idlength)
             Ring is constituted of 2^m nodes maximum
         '''
-        return self.lookup(self.calcfinger(k), useOnlySucc)
+        if useOnlySucc:
+            return self.lookupWithSucc(self.calcfinger(k))
+        else:
+            return self.lookup(self.calcfinger(k))
 
             
-    def lookup(self, key, useOnlySucc=False):
+    def lookupWithSucc(self, key):
+        if isinstance(key, Key):
+            key = key
+        elif isinstance(key, str):
+            key = Key(key)
+        else:
+            raise TypeError
+
+        # Self is successor ?
+        if self.uid == key:
+            return self
+        # Is self.successor the successor of key ?
+        if key.isbetween(self.uid.value, self.successor.uid.value):
+            return self.successor
+
+        return self.successor.lookupWithSucc(key)
+
+    def lookup(self, key):
         """
         Lookup method to find the responsive node for a given key
 
         return a node object
         
         """
+        #TODO not working on test done 20-04-2020
         
         if isinstance(key, Node):
             key = node.uid
@@ -114,7 +135,7 @@ class Node(object):
         elif isinstance(key, str):
             key = Key(key)
         else:
-            raise Exception
+            raise TypeError
 
         def getNextDichotomy(prevDichotomy, dichotomy, sign):
             fingmax = self.uid.idlength - 1
@@ -134,121 +155,106 @@ class Node(object):
                 else:
                     return dichotomy - (dichotomy // 2)
 
-        # lookup on successor and then ask to the successor
-        if useOnlySucc:
-            # Self is successor ?
-            if self.uid == key:
-                return self
-            # Is self.successor the successor of key ? 
-            if key.isbetween(self.uid.value, self.successor.uid.value):
-                return self.successor
-            
-            return self.successor.lookup(key, useOnlySucc)
+        nfinger = self.uid.idlength
+        fingmax = nfinger - 1
 
-        # Use finger table to optim lookup
-        #TODO not working on test done 20-04-2020
-        else:
+        # test if key to lookup is outside of finger tables
+        if key.isbetween(self.finger[fingmax]["resp"].uid + 1,
+                         self.finger[0]["key"] - 1):
+            # let's ask to last finger
+            self.log.debug("lookup recurse to node {}".format(self.finger[fingmax]["resp"]))
+            return self.finger[fingmax]["resp"].lookup(key)
 
-            nfinger = self.uid.idlength
-            fingmax = nfinger - 1
+        self.log.debug("key={}; finger(255)[resp]={}; finger(0)(key)={}\nfinger(255)(key)={}"
+                       .format(key,
+                               Key(self.finger[fingmax]["resp"].uid + 1),
+                               Key(self.finger[0]["key"] - 1),
+                               self.finger[255]["key"])
+                      )
+        # self knows the answer because key < (self finger max)
 
-            # test if key to lookup is outside of finger tables
-            if key.isbetween(self.finger[fingmax]["resp"].uid + 1,
-                             self.finger[0]["key"] - 1):
-                # let's ask to last finger
-                self.log.debug("lookup recurse to node {}".format(self.finger[fingmax]["resp"]))
-                return self.finger[fingmax]["resp"].lookup(key, useOnlySucc)
+        dichotomy = nfinger // 2
+        prevDichotomy = 0
+        # algorithm by dichotomy
+        while True:
 
-            self.log.debug("key={}; finger(255)[resp]={}; finger(0)(key)={}\nfinger(255)(key)={}"
-                           .format(key,
-                                   Key(self.finger[fingmax]["resp"].uid + 1),
-                                   Key(self.finger[0]["key"] - 1),
-                                   self.finger[255]["key"])
-                          )
-            # self knows the answer because key < (self finger max)
+            # finger(0) <= key < finger(dichotomy)
+            # finger(dichotomy)[key] <= key <= finger(dichotomy)[resp]
+            if key.isbetween(self.finger[dichotomy]["key"],
+                               self.finger[dichotomy]["resp"].uid.value):
+                self.log.debug("Assigns {} as succ for {}"
+                        .format(self.finger[dichotomy]["resp"], key))
+                return self.finger[dichotomy]["resp"]
 
-            dichotomy = nfinger // 2
-            prevDichotomy = 0
-            # algorithm by dichotomy
-            while True:
+            elif key.isbetween(self.finger[0]["key"] + 1,
+                             self.finger[dichotomy]["key"] - 1):
+                self.log.debug("key down to dichotomy: dichotomy:{} -"
+                               "prevDichotomy:{} -"
+                               "finger-dicho)(res)={} -"
+                               "finger-dicho)(key)={} -"
+                               "finger(0)[keyt]={}"
+                               .format(dichotomy,
+                                       prevDichotomy,
+                                       self.finger[dichotomy]["resp"],
+                                       self.finger[dichotomy]["key"],
+                                       self.finger[0]["key"]))
 
-                # finger(0) <= key < finger(dichotomy)
-                # finger(dichotomy)[key] <= key <= finger(dichotomy)[resp]
-                if key.isbetween(self.finger[dichotomy]["key"],
-                                   self.finger[dichotomy]["resp"].uid.value):
-                    self.log.debug("Assigns {} as succ for {}"
-                            .format(self.finger[dichotomy]["resp"], key))
-                    return self.finger[dichotomy]["resp"]
-                    
-                elif key.isbetween(self.finger[0]["key"] + 1,
-                                 self.finger[dichotomy]["key"] - 1):
-                    self.log.debug("key down to dichotomy: dichotomy:{} -"
-                                   "prevDichotomy:{} -"
-                                   "finger-dicho)(res)={} -"
-                                   "finger-dicho)(key)={} -"
-                                   "finger(0)[keyt]={}"
-                                   .format(dichotomy,
-                                           prevDichotomy,
-                                           self.finger[dichotomy]["resp"],
-                                           self.finger[dichotomy]["key"],
-                                           self.finger[0]["key"]))
+                if self.finger[dichotomy - 1]["resp"] != self.finger[dichotomy]["resp"]:
+                    if key.isbetween(self.finger[dichotomy - 1]["resp"].uid + 1,
+                                   self.finger[dichotomy]["key"] - 1):
+                        return self.finger[dichotomy - 1]["resp"].lookup(key)
+                try:
+                    dichotomy_tmp = getNextDichotomy(prevDichotomy,
+                                                     dichotomy,
+                                                     "-")
+                except ValueError as e:
+                    self.log.error(e)
+                    raise
+                prevDichotomy = dichotomy
+                dichotomy = dichotomy_tmp
 
-                    if self.finger[dichotomy - 1]["resp"] != self.finger[dichotomy]["resp"]:
-                        if key.isbetween(self.finger[dichotomy - 1]["resp"].uid + 1,
-                                       self.finger[dichotomy]["key"] - 1):
-                            return self.finger[dichotomy - 1]["resp"].lookup(key, useOnlySucc)
-                    try:
-                        dichotomy_tmp = getNextDichotomy(prevDichotomy,
-                                                         dichotomy,
-                                                         "-")
-                    except ValueError as e:
-                        self.log.error(e)
-                        raise
-                    prevDichotomy = dichotomy
-                    dichotomy = dichotomy_tmp
+            # finger(dichotomy) < key <= finger(255)
+            elif key.isbetween(self.finger[dichotomy]["resp"].uid + 1,
+                               self.finger[fingmax]["resp"].uid.value):
+                self.log.debug("UP to dichotomy: dichotomy:{} -"
+                               "prevDichotomy:{} -"
+                               "finger-dicho(resp)={} -"
+                               "finger(0)[key]={} - "
+                               "finger(dichotomy-1)[resp]={} -"
+                               "finger(dicho)[key]={}"
+                               .format(dichotomy,
+                                       prevDichotomy,
+                                       self.finger[dichotomy]["resp"],
+                                       self.finger[0]["key"],
+                                       self.finger[dichotomy - 1]["resp"].uid,
+                                       self.finger[dichotomy]["key"],
+                                       ))
 
-                # finger(dichotomy) < key <= finger(255)
-                elif key.isbetween(self.finger[dichotomy]["resp"].uid + 1,
-                                   self.finger[fingmax]["resp"].uid.value):
-                    self.log.debug("UP to dichotomy: dichotomy:{} -"
-                                   "prevDichotomy:{} -"
-                                   "finger-dicho(resp)={} -"
-                                   "finger(0)[key]={} - "
-                                   "finger(dichotomy-1)[resp]={} -"
-                                   "finger(dicho)[key]={}"
-                                   .format(dichotomy,
-                                           prevDichotomy,
-                                           self.finger[dichotomy]["resp"],
-                                           self.finger[0]["key"],
-                                           self.finger[dichotomy - 1]["resp"].uid,
-                                           self.finger[dichotomy]["key"],
-                                           ))
+                # if finger dicho and next finger does not have same responsible
+                # it means there is a room for unreferenced node in self fingers
+                # if looked up key is in this room, we have to ask to the finger dichotomy
+                # to lookup for self, as self does not know the answer
+                if self.finger[dichotomy + 1]["resp"] != self.finger[dichotomy]["resp"]:
+                    # test if key is in this room
+                    # between the finger dichotomy responsible & the next finger key
+                    if key.isbetween(self.finger[dichotomy]["resp"].uid + 1,
+                                     self.finger[dichotomy + 1]["key"] - 1):
+                        # let's ask to self.finger[dichotomy]
+                        return self.finger[dichotomy]["resp"].lookup(key)
+                try:
+                    dichotomy_tmp = getNextDichotomy(prevDichotomy,
+                                                     dichotomy,
+                                                     "+")
+                except ValueError as e:
+                    self.log.error(e)
+                    raise
 
-                    # if finger dicho and next finger does not have same responsible
-                    # it means there is a room for unreferenced node in self fingers
-                    # if looked up key is in this room, we have to ask to the finger dichotomy
-                    # to lookup for self, as self does not know the answer
-                    if self.finger[dichotomy + 1]["resp"] != self.finger[dichotomy]["resp"]:
-                        # test if key is in this room
-                        # between the finger dichotomy responsible & the next finger key
-                        if key.isbetween(self.finger[dichotomy]["resp"].uid + 1,
-                                         self.finger[dichotomy + 1]["key"] - 1):
-                            # let's ask to self.finger[dichotomy]
-                            return self.finger[dichotomy]["resp"].lookup(key, useOnlySucc)
-                    try:
-                        dichotomy_tmp = getNextDichotomy(prevDichotomy,
-                                                         dichotomy,
-                                                         "+")
-                    except ValueError as e:
-                        self.log.error(e)
-                        raise
+                prevDichotomy = dichotomy
+                dichotomy = dichotomy_tmp
 
-                    prevDichotomy = dichotomy
-                    dichotomy = dichotomy_tmp
-
-                else:
-                    self.log.error("OUT OF TOWN")
-                    raise IndexError("lookup failed on properly catching the inclusion of the key.")
+            else:
+                self.log.error("OUT OF TOWN")
+                raise IndexError("lookup failed on properly catching the inclusion of the key.")
 
  
     def calcfinger(self, k):
