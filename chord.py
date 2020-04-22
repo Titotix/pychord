@@ -104,17 +104,17 @@ class Node(object):
             
     def lookupWithSucc(self, key):
         if isinstance(key, Key):
-            key = key
+            keyLookedUp = key
         elif isinstance(key, str):
-            key = Key(key)
+            keyLookedUp = Key(key)
         else:
             raise TypeError
 
         # Self is successor ?
-        if self.uid == key:
+        if self.uid == keyLookedUp:
             return self
         # Is self.successor the successor of key ?
-        if key.isbetween(self.uid.value, self.successor.uid.value):
+        if keyLookedUp.isbetween(self.uid.value, self.successor.uid.value):
             return self.successor
 
         return self.successor.lookupWithSucc(key)

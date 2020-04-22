@@ -123,6 +123,7 @@ class Key(object):
     def isbetween(self, limit1, limit2):
         '''
         Returns True if self.value is contained by [limit1,  limit2]
+        So if self.value == limit1 or limit2 then return True
         Raise exception if limit1 == limit2
         '''
         if len(self.value) != len(limit1) != len(limit2):
