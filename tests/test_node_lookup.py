@@ -23,11 +23,11 @@ class NodeLookupTest(unittest.TestCase):
         self.node1.stopXmlRPCServer()
         self.node2.stopXmlRPCServer()
 
-    def test_lookup_useOnlySucc(self):
-        self.assertTrue(self.node0.lookup("1".zfill(64), useOnlySucc=True) is self.node1)
-        self.assertTrue(self.node0.lookup("a"*64, useOnlySucc=True) is self.node0)
-        self.assertTrue(self.node1.lookup("a"*64, useOnlySucc=True) is self.node0)
-        self.assertTrue(self.node2.lookup("a"*64, useOnlySucc=True) is self.node0)
+    def test_lookupWithSucc(self):
+        self.assertTrue(self.node0.lookupWithSucc("1".zfill(64)) is self.node1)
+        self.assertTrue(self.node0.lookupWithSucc("a"*64) is self.node0)
+        self.assertTrue(self.node1.lookupWithSucc("a"*64) is self.node0)
+        self.assertTrue(self.node2.lookupWithSucc("a"*64) is self.node0)
 
 class NodeBasicMethodsTest(unittest.TestCase):
     @classmethod
