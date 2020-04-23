@@ -12,6 +12,7 @@ class ChordServerxmlrpc(threading.Thread):
         self.node = node
         self.tcpserver = SimpleXMLRPCServer(
                 (self.ip, self.port),
+                allow_none=True,
                 requestHandler=RequestHandler
         )
 

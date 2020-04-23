@@ -3,7 +3,8 @@ import xmlrpc.client
 class ChordClientxmlrpcProxy(xmlrpc.client.ServerProxy):
     def __init__(self, ip, port):
         xmlrpc.client.ServerProxy.__init__(self,
-                "http://{ip}:{port}/chord".format(ip=ip, port=port)
+                "http://{ip}:{port}/chord".format(ip=ip, port=port),
+                allow_none=True
         )
 
 def getXmlRPCClient(self, ip=None, port=None, node=None):
