@@ -11,7 +11,7 @@ class NodeUidTest(unittest.TestCase):
     def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = 6000
-        self.node = chord.Node(self.ip, self.port)
+        self.node = chord.LocalNode(self.ip, self.port)
 
     @classmethod
     def tearDOwnClass(self):
@@ -42,7 +42,7 @@ class KeyTest(unittest.TestCase):
         # while instantiate a node we get a chord.Uid() (node.uid)
         # which is a subclass of chord.Key
         # we gonna use self.node.uid to test Key features
-        self.node = chord.Node(self.ip, self.port)
+        self.node = chord.LocalNode(self.ip, self.port)
 
     @classmethod
     def tearDownClass(self):
@@ -84,7 +84,7 @@ class UidValueOperationTest(unittest.TestCase):
     def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = 5000
-        self.node = chord.Node(self.ip, self.port)
+        self.node = chord.LocalNode(self.ip, self.port)
 
     @classmethod
     def tearDOwnClass(self):
@@ -174,7 +174,7 @@ class UidIsBetweenTest(unittest.TestCase):
     def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = 3000
-        self.node0 = chord.Node(self.ip, self.port)
+        self.node0 = chord.LocalNode(self.ip, self.port)
 
     @classmethod
     def tearDOwnClass(self):
