@@ -40,7 +40,7 @@ class LocalNode(BasicNode):
         BasicNode.__init__(self, ip, port)
         #TODO definition of successor in chord paper is different than the one I implemented, should be clarify
         # refer to 4.2 consistent hashing
-        self.successor = self
+        self.successor = None
         # TODO create a finger class & integrate
         self.finger = []
         self.initfinger()
@@ -56,7 +56,12 @@ class LocalNode(BasicNode):
             self.finger.append(None)
 
     def setsuccessor(self, successor):
-        self.successor = successor
+        """
+        Create a RemoteNode object and set to self.successor
+
+        @param successor: dict with ip and port as key
+        """
+        self.successor = RemoteNode(successor["ip"], successor["port"])
     
     def addToRing(self, newnode):
         '''
@@ -67,25 +72,28 @@ class LocalNode(BasicNode):
         #self.log.debug("{} want to join {}".format(newnode.uid.value, self.uid.value))
         if newnode.uid.value != self.uid.value:
             # TODO optim : no need to update all node of the ring at each new node
-            self.updatesucc(newnode)
-            self.updatefinger(newnode, self)
+            self.updatesucc({"ip": newnode.ip, "port": newnode.port})
+            #self.updatefinger(newnode, self)
         else:
 
             #self.log.error("Same uid than contacted node")
             raise Exception
 
     def updatesucc(self, newnode):
-        if newnode.uid.value == self.uid.value:
-            raise Exception
-        if self == self.successor:
+        #if newnode.uid.value == self.uid.value:
+        #    raise Exception
+        newnodeObj = BasicNode(newnode["ip"], newnode["port"])
+        if self.successor is None:
             self.setsuccessor(newnode)
-            newnode.setsuccessor(self)
-        
-        elif newnode.uid.isbetween(self.uid.value, self.successor.uid.value):
-            newnode.setsuccessor(self.successor)
+            self.successor.rpcProxy.setsuccessor({"ip":self.ip, "port":self.port})
+
+        elif newnodeObj.uid.isbetween(self.uid.value, self.successor.uid.value):
+            newnodeSuccip = self.successor.ip
+            newnodeSuccport = self.successor.port
             self.setsuccessor(newnode)
+            self.successor.rpcProxy.setsuccessor({"ip": newnodeSuccip, "port": newnodeSuccport})
         else:
-            self.successor.updatesucc(newnode)
+            self.successor.rpcProxy.updatesucc(newnode)
 
     def updatefinger(self, newnode, firstnode):
         '''
@@ -114,8 +122,15 @@ class LocalNode(BasicNode):
         else:
             return self.lookup(self.calcfinger(k))
 
-            
+
     def lookupWithSucc(self, key):
+        """
+        Lookup method which uses only successor information
+        Provided a key, lookupWithSucc return a dict with basic info
+        about the responsible node of the provided key
+
+        @param key: key to look for the responsible
+        """
         if isinstance(key, Key):
             keyLookedUp = key
         elif isinstance(key, str):
@@ -125,12 +140,12 @@ class LocalNode(BasicNode):
 
         # Self is successor ?
         if self.uid == keyLookedUp:
-            return self
+            return {"ip": self.ip, "port": self.port}
         # Is self.successor the successor of key ?
         if keyLookedUp.isbetween(self.uid.value, self.successor.uid.value):
-            return self.successor
+            return {"ip": self.successor.ip, "port": self.successor.port}
 
-        return self.successor.lookupWithSucc(key)
+        return self.successor.rpcProxy.lookupWithSucc(key)
 
     def lookup(self, key):
         """
