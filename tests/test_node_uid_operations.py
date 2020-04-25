@@ -75,6 +75,18 @@ class KeyTest(unittest.TestCase):
         self.assertTrue(self.node.uid <= int(self.node.uid.value, 16))
         self.assertFalse(self.node.uid <= (int(self.node.uid.value, 16) - 1))
 
+    def test_eq_str(self):
+        """
+        Test __eq__() with a str arg
+        """
+        self.assertTrue(self.node.uid == "f9b8b725655d34a49328e659985bc43995caeec537f01f6129ce759ccd143119")
+
+    def test_eq_int(self):
+        """
+        Test __eq__() with a int arg
+        """
+        self.assertTrue(self.node.uid == int("f9b8b725655d34a49328e659985bc43995caeec537f01f6129ce759ccd143119", 16))
+
 class UidValueOperationTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
