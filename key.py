@@ -30,16 +30,18 @@ class Key(object):
             return int(self.value, 16) >= int(value, 16)
         elif isinstance(value,  Key):
             return int(self.value, 16) >= int(value.value, 16)
-        #TODO implem for int
+        elif isinstance(value, int):
+            return int(self.value, 16) >= value
         else:
             raise TypeError("__ge__ only supports str or Key as input")
 
     def __lt__(self, value):
         if isinstance(value, str):
-            return int(self.value, 16)  < int(value, 16) 
+            return int(self.value, 16) < int(value, 16) 
         elif isinstance(value,  Key):
             return int(self.value, 16) < int(value.value, 16)
-        #TODO implem for int
+        elif isinstance(value, int):
+            return int(self.value, 16) < value
         else:
             raise TypeError("__lt__ only supports str or Key as input")
 
@@ -48,7 +50,8 @@ class Key(object):
             return int(self.value, 16) <= int(value, 16)
         elif isinstance(value,  Key):
             return int(self.value, 16) <= int(value.value, 16)
-        #TODO implem for int
+        elif isinstance(value, int):
+            return int(self.value, 16) <= value
         else:
             raise TypeError("__le__ only supports str or Key as input")
 
@@ -57,7 +60,8 @@ class Key(object):
             return int(self.value, 16) == int(value, 16)
         elif isinstance(value,  Key):
             return int(self.value, 16) == int(value.value, 16)
-        #TODO implem for int
+        elif isinstance(value, int):
+            return int(self.value, 16) == value
         else:
             raise TypeError("__eq__ only supports str or Key as input")
 
@@ -66,7 +70,8 @@ class Key(object):
             return int(self.value, 16) != int(value, 16)
         elif isinstance(value,  Key):
             return int(self.value, 16) != int(value.value, 16)
-        #TODO implem for int
+        elif isinstance(value, int):
+            return int(self.value, 16) != value
         else:
             raise TypeError("__ne__ only supports str or Key as input")
 
