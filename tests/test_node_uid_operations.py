@@ -39,14 +39,10 @@ class KeyTest(unittest.TestCase):
     def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = 2000
-        # while instantiate a node we get a chord.Uid() (node.uid)
+        # while instantiate a BasicNode we get a chord.Uid() (node.uid)
         # which is a subclass of chord.Key
         # we gonna use self.node.uid to test Key features
-        self.node = chord.LocalNode(self.ip, self.port)
-
-    @classmethod
-    def tearDownClass(self):
-        self.node.stopXmlRPCServer()
+        self.node = chord.BasicNode(self.ip, self.port)
 
     def test_lt_str(self):
         #compare to value

@@ -26,25 +26,18 @@ class NodeLookupTest(unittest.TestCase):
         keyTolookup = self.node0.uid + 1
         res = self.node0.lookupWithSucc(keyTolookup)
         noderes = chord.BasicNode(res["ip"], res["port"])
-        self.assertTrue(noderes.uid.value == self.node2.uid.value)
+        self.assertEqual(noderes.uid.value, self.node2.uid.value)
 
         keyTolookup = self.node1.uid + 1
         res = self.node0.lookupWithSucc(keyTolookup)
         noderes = chord.BasicNode(res["ip"], res["port"])
-        self.assertTrue(noderes.uid.value == self.node0.uid.value)
+        self.assertEqual(noderes.uid.value, self.node0.uid.value)
 
         keyTolookup = self.node2.uid + 1
         res = self.node0.lookupWithSucc(keyTolookup)
         noderes = chord.BasicNode(res["ip"], res["port"])
-        self.assertTrue(noderes.uid.value == self.node1.uid.value)
+        self.assertEqual(noderes.uid.value, self.node1.uid.value)
 
-#class NodeBasicMethodsTest(unittest.TestCase):
-#    @classmethod
-#    def setUpClass(self):
-#        self.ip = "127.0.0.1"
-#        self.port = [2000, 2001, 2002]
-#        self.node0 = chord.Node(self.ip, self.port[0])
-        
 class NodeaddToRingTest(unittest.TestCase):
 
     def setUp(self):
@@ -71,14 +64,15 @@ class NodeaddToRingTest(unittest.TestCase):
         # add node1 from node0
         self.node0.addToRing(chord.BasicNode(self.node1.ip, self.node1.port))
         # successor(node0) == node1 ?
-        self.assertTrue(self.node0.successor.uid.value == self.node1.uid.value)
+        self.assertEqual(self.node0.successor.uid.value, self.node1.uid.value)
         # successor(node1) == node0 ?
-        self.assertTrue(self.node1.successor.uid.value == self.node0.uid.value)
+        self.assertEqual(self.node1.successor.uid.value, self.node0.uid.value)
 
     def test_ThreeNodesRing_mainNode(self):
         """
         Test addToRing methods with a ring of 3 nodes only
-        Two nodes are added from a 'main one'
+        Two nodes are added from the same node
+        it provides a BasicNode to addToRing method
         Check if successor attr is the proper one
         """
         # add node1 from node0
@@ -86,9 +80,9 @@ class NodeaddToRingTest(unittest.TestCase):
         # add node2 from node0
         self.node0.addToRing(chord.BasicNode(self.node2.ip, self.node2.port))
 
-        self.assertTrue(self.node0.successor.uid.value == self.node2.uid.value)
-        self.assertTrue(self.node1.successor.uid.value == self.node0.uid.value)
-        self.assertTrue(self.node2.successor.uid.value == self.node1.uid.value)
+        self.assertEqual(self.node0.successor.uid.value, self.node2.uid.value)
+        self.assertEqual(self.node1.successor.uid.value, self.node0.uid.value)
+        self.assertEqual(self.node2.successor.uid.value, self.node1.uid.value)
 
         #node0 a2fa69d06e3fdca9e022f993e81081d3cc65b262d4a77bd47caa190b7180d354
         #node1 4e03fd4d8bfdf5b10d1d6bbda1bc91caffb6be6740e3baade0851c3b57b3a140
