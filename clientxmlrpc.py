@@ -24,7 +24,7 @@ def getXmlRPCClient(self, ip=None, port=None, node=None):
     
     if isinstance(ip, str) and isinstance(port, int):
         return clientxmlrpc.ChordClientxmlrpcProxy(ip, port)
-    elif isinstance(node, chord.Node):
+    elif isinstance(node, chord.BasicNode):
         return clientxmlrpc.ChordClientxmlrpcProx(node.ip, node.port)
     else:
         raise TypeError

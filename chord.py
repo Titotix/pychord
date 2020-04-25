@@ -5,11 +5,39 @@ import clientxmlrpc
 
 from key import Key, Uid
 
-class Node(object):
+class BasicNode(object):
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
         self.uid = Uid(self.ip + ":" + repr(self.port))
+
+        # self.logging
+        #TODO This self.log sucks
+        #self.log = logging.getLogger(repr(self.uid))
+        #self.log.setLevel(logging.INFO)
+        #ch = logging.StreamHandler(sys.stdout)
+        #ch.setLevel(logging.DEBUG)
+        #formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+        #ch.setFormatter(formatter)
+        #self.log.addHandler(ch)
+
+        #self.log.debug("node creation: uid={}".format(self.uid.value))
+
+    #def __repr__(self):
+    #    #TODO: no hardcoded class name
+    #    return "<class BasicNode - {hash}>".format(hash=self.uid)
+
+    def getUid(self):
+        return self.uid
+
+class RemoteNode(BasicNode):
+    def __init__(self, ip, port):
+        BasicNode.__init__(self, ip, port)
+        self.rpcProxy = clientxmlrpc.ChordClientxmlrpcProxy(ip, port)
+
+class LocalNode(BasicNode):
+    def __init__(self, ip, port):
+        BasicNode.__init__(self, ip, port)
         #TODO definition of successor in chord paper is different than the one I implemented, should be clarify
         # refer to 4.2 consistent hashing
         self.successor = self
@@ -17,48 +45,33 @@ class Node(object):
         self.finger = []
         self.initfinger()
 
-        # self.logging
-        self.log = logging.getLogger(repr(self.uid))
-        self.log.setLevel(logging.INFO)
-        ch = logging.StreamHandler(sys.stdout)
-        ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
-        ch.setFormatter(formatter)
-        self.log.addHandler(ch)
-
-        self.log.debug("node creation: uid={}".format(self.uid.value))
-
         self.server = serverxmlrpc.ChordServerxmlrpc(self)
         self.server.start()
 
     def stopXmlRPCServer(self):
         self.server.stop()
 
-    def __repr__(self):
-        return "<class Node - {hash}>".format(hash=self.uid)
-
     def initfinger(self):
         for i in range(0, self.uid.idlength):
             self.finger.append(None)
-
-    def getUid(self):
-        return self.uid
 
     def setsuccessor(self, successor):
         self.successor = successor
     
     def addToRing(self, newnode):
         '''
-        @param newnode : Node to interact first with the ring
+        @param newnode : BasicNode to interact first with the ring
         '''
-        self.log.debug("{} want to join {}".format(newnode.uid.value, self.uid.value))
+        if isinstance(newnode, dict):
+            newnode = BasicNode(newnode["ip"], newnode["port"])
+        #self.log.debug("{} want to join {}".format(newnode.uid.value, self.uid.value))
         if newnode.uid.value != self.uid.value:
             # TODO optim : no need to update all node of the ring at each new node
             self.updatesucc(newnode)
             self.updatefinger(newnode, self)
         else:
 
-            self.log.error("Same uid than contacted node")
+            #self.log.error("Same uid than contacted node")
             raise Exception
 
     def updatesucc(self, newnode):
@@ -128,7 +141,7 @@ class Node(object):
         """
         #TODO not working on test done 20-04-2020
         
-        if isinstance(key, Node):
+        if isinstance(key, BasicNode):
             key = node.uid
         elif isinstance(key, Key):
             key = key
@@ -162,15 +175,15 @@ class Node(object):
         if key.isbetween(self.finger[fingmax]["resp"].uid + 1,
                          self.finger[0]["key"] - 1):
             # let's ask to last finger
-            self.log.debug("lookup recurse to node {}".format(self.finger[fingmax]["resp"]))
+            #self.log.debug("lookup recurse to node {}".format(self.finger[fingmax]["resp"]))
             return self.finger[fingmax]["resp"].lookup(key)
 
-        self.log.debug("key={}; finger(255)[resp]={}; finger(0)(key)={}\nfinger(255)(key)={}"
-                       .format(key,
-                               Key(self.finger[fingmax]["resp"].uid + 1),
-                               Key(self.finger[0]["key"] - 1),
-                               self.finger[255]["key"])
-                      )
+        #self.log.debug("key={}; finger(255)[resp]={}; finger(0)(key)={}\nfinger(255)(key)={}"
+        #               .format(key,
+        #                       Key(self.finger[fingmax]["resp"].uid + 1),
+        #                       Key(self.finger[0]["key"] - 1),
+        #                       self.finger[255]["key"])
+        #              )
         # self knows the answer because key < (self finger max)
 
         dichotomy = nfinger // 2
@@ -182,22 +195,22 @@ class Node(object):
             # finger(dichotomy)[key] <= key <= finger(dichotomy)[resp]
             if key.isbetween(self.finger[dichotomy]["key"],
                                self.finger[dichotomy]["resp"].uid.value):
-                self.log.debug("Assigns {} as succ for {}"
-                        .format(self.finger[dichotomy]["resp"], key))
+                #self.log.debug("Assigns {} as succ for {}"
+                #        .format(self.finger[dichotomy]["resp"], key))
                 return self.finger[dichotomy]["resp"]
 
             elif key.isbetween(self.finger[0]["key"] + 1,
                              self.finger[dichotomy]["key"] - 1):
-                self.log.debug("key down to dichotomy: dichotomy:{} -"
-                               "prevDichotomy:{} -"
-                               "finger-dicho)(res)={} -"
-                               "finger-dicho)(key)={} -"
-                               "finger(0)[keyt]={}"
-                               .format(dichotomy,
-                                       prevDichotomy,
-                                       self.finger[dichotomy]["resp"],
-                                       self.finger[dichotomy]["key"],
-                                       self.finger[0]["key"]))
+                #self.log.debug("key down to dichotomy: dichotomy:{} -"
+                #               "prevDichotomy:{} -"
+                #               "finger-dicho)(res)={} -"
+                #               "finger-dicho)(key)={} -"
+                #               "finger(0)[keyt]={}"
+                #               .format(dichotomy,
+                #                       prevDichotomy,
+                #                       self.finger[dichotomy]["resp"],
+                #                       self.finger[dichotomy]["key"],
+                #                       self.finger[0]["key"]))
 
                 if self.finger[dichotomy - 1]["resp"] != self.finger[dichotomy]["resp"]:
                     if key.isbetween(self.finger[dichotomy - 1]["resp"].uid + 1,
@@ -208,7 +221,7 @@ class Node(object):
                                                      dichotomy,
                                                      "-")
                 except ValueError as e:
-                    self.log.error(e)
+                    #self.log.error(e)
                     raise
                 prevDichotomy = dichotomy
                 dichotomy = dichotomy_tmp
@@ -216,19 +229,19 @@ class Node(object):
             # finger(dichotomy) < key <= finger(255)
             elif key.isbetween(self.finger[dichotomy]["resp"].uid + 1,
                                self.finger[fingmax]["resp"].uid.value):
-                self.log.debug("UP to dichotomy: dichotomy:{} -"
-                               "prevDichotomy:{} -"
-                               "finger-dicho(resp)={} -"
-                               "finger(0)[key]={} - "
-                               "finger(dichotomy-1)[resp]={} -"
-                               "finger(dicho)[key]={}"
-                               .format(dichotomy,
-                                       prevDichotomy,
-                                       self.finger[dichotomy]["resp"],
-                                       self.finger[0]["key"],
-                                       self.finger[dichotomy - 1]["resp"].uid,
-                                       self.finger[dichotomy]["key"],
-                                       ))
+                #self.log.debug("UP to dichotomy: dichotomy:{} -"
+                #               "prevDichotomy:{} -"
+                #               "finger-dicho(resp)={} -"
+                #               "finger(0)[key]={} - "
+                #               "finger(dichotomy-1)[resp]={} -"
+                #               "finger(dicho)[key]={}"
+                #               .format(dichotomy,
+                #                       prevDichotomy,
+                #                       self.finger[dichotomy]["resp"],
+                #                       self.finger[0]["key"],
+                #                       self.finger[dichotomy - 1]["resp"].uid,
+                #                       self.finger[dichotomy]["key"],
+                #                       ))
 
                 # if finger dicho and next finger does not have same responsible
                 # it means there is a room for unreferenced node in self fingers
@@ -246,14 +259,14 @@ class Node(object):
                                                      dichotomy,
                                                      "+")
                 except ValueError as e:
-                    self.log.error(e)
+                    #self.log.error(e)
                     raise
 
                 prevDichotomy = dichotomy
                 dichotomy = dichotomy_tmp
 
             else:
-                self.log.error("OUT OF TOWN")
+                #self.log.error("OUT OF TOWN")
                 raise IndexError("lookup failed on properly catching the inclusion of the key.")
 
  
@@ -266,11 +279,12 @@ class Node(object):
 
     def printFingers(self):
         for n, f in enumerate(self.finger):
-            self.log.debug("TABLE: finger{0} : "
-                "- key: {2} - resp: {1}"
-                .format(n, f["resp"].uid, f["key"]))
+            #self.log.debug("TABLE: finger{0} : "
+            #    "- key: {2} - resp: {1}"
+            #    .format(n, f["resp"].uid, f["key"]))
             if f["resp"].uid.value != self.lookupfinger(n, useOnlySucc=True).uid.value:
-                self.log.error("error between finger table and computed value")
+                #self.log.error("error between finger table and computed value")
+                continue
 
     def printRing(self):
         succ = self.successor
@@ -280,5 +294,5 @@ class Node(object):
             output += repr(key) + " -> "
             succ = succ.successor
             key = succ.uid
-        self.log.debug(output)
+        #self.log.debug(output)
 
