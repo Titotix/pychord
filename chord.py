@@ -43,16 +43,23 @@ class LocalNode(BasicNode):
         if isinstance(newnode, dict):
             newnode = BasicNode(newnode["ip"], newnode["port"])
         if newnode.uid.value != self.uid.value:
-            # TODO optim : no need to update all node of the ring at each new node
             self.updatesucc({"ip": newnode.ip, "port": newnode.port})
         else:
 
             raise Exception
 
     def updatesucc(self, newnode):
-        #if newnode.uid.value == self.uid.value:
-        #    raise Exception
+        """
+        Update successor with the node wich just join if relevant
+        If not, propagate updatesucc to its own successor
+        """
         newnodeObj = BasicNode(newnode["ip"], newnode["port"])
+
+        #TODO: check if this can happen and in wich case
+        # as it should not happen if updatesucc work as expected
+        if newnode.uid.value == self.uid.value:
+            raise Exception
+
         if self.successor is None:
             self.setsuccessor(newnode)
             self.successor.rpcProxy.setsuccessor({"ip":self.ip, "port":self.port})
