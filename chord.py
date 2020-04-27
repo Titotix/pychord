@@ -67,6 +67,14 @@ class LocalNode(BasicNode):
         """
         self.successor = RemoteNode(successor["ip"], successor["port"])
     
+    def setpredecessor(self, predecessor):
+        """
+        Create a RemoteNode object and set to self.predecessor
+
+        @param predecessor: dict with ip and port as key
+        """
+        self.predecessor = RemoteNode(predecessor["ip"], predecessor["port"])
+    
     def addToRing(self, newnode):
         '''
         @param newnode : BasicNode to interact first with the ring
