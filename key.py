@@ -3,8 +3,12 @@ import hashlib
 class Key(object):
 
     def __init__(self, value):
-        self.value = value
+        #256 because we use sha256
+        #which return string of 64 hexa char (or 256 bits)
         self.idlength = 256
+        if len(value) != self.idlength // 4:
+            raise ValueError
+        self.value = value
 
     def setValue(self, newValue):
         if isinstance(newValue, str) and len(newValue) == self.idlength//4:
