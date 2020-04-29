@@ -333,6 +333,8 @@ class LocalNode(BasicNode):
         Returns computed key for finger k
         @param k: from 0 to (m - 1)
         '''
+        if k > self.uid.idlength - 1:
+            raise ValueError
         return self.uid + pow(2, k)
 
     def printFingers(self):
