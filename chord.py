@@ -6,9 +6,18 @@ import clientxmlrpc
 from key import Key, Uid
 
 class BasicNode(object):
-    def __init__(self, ip, port):
+    def __init__(self, *args):
+        if len(args) == 2:
+            ip = args[0]
+            port = args[1]
+        elif len(args) == 1:
+            ip = args[0]["ip"]
+            port = args[0]["port"]
+        else:
+            raise ValueError
         self.ip = ip
         self.port = port
+        #TODO:optimization with sys.intern() str of 64 char
         self.uid = Uid(self.ip + ":" + repr(self.port))
 
         # self.logging
@@ -31,9 +40,9 @@ class BasicNode(object):
         return self.uid
 
 class RemoteNode(BasicNode):
-    def __init__(self, ip, port):
-        BasicNode.__init__(self, ip, port)
-        self.rpcProxy = clientxmlrpc.ChordClientxmlrpcProxy(ip, port)
+    def __init__(self, *args):
+        super(RemoteNode, self).__init__(*args)
+        self.rpcProxy = clientxmlrpc.ChordClientxmlrpcProxy(self.ip, self.port)
 
 class LocalNode(BasicNode):
     def __init__(self, ip, port):
