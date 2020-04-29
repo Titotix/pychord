@@ -44,6 +44,23 @@ class RemoteNode(BasicNode):
         super(RemoteNode, self).__init__(*args)
         self.rpcProxy = clientxmlrpc.ChordClientxmlrpcProxy(self.ip, self.port)
 
+class Finger(object):
+    def __init__(self, key, respnode):
+        #set key attr
+        if isinstance(key, str):
+            self.key = Key(key)
+        elif isinstance(key, Key):
+            self.key = key
+        else:
+            raise TypeError("key type not accepted. Support str and Key")
+
+        # self.node can be either RemoteNode or LocalNode
+        # according to who's node is it
+        #TODO: find a way to abstract access to node's method wether it's Remote or not
+        if isinstance(respnode, dict):
+            respnode = RemoteNode(respnode["ip"], respnode["port"])
+        self.node = respnode
+
 class LocalNode(BasicNode):
     def __init__(self, ip, port):
         BasicNode.__init__(self, ip, port)
@@ -53,10 +70,10 @@ class LocalNode(BasicNode):
         # those two successor are not distinguished in the paper
         self.successor = None
         self.predecessor = None
-        # TODO create a finger class & integrate
-        # -> finger will be a RemoteNode
-        self.finger = []
-        self.initfinger()
+
+        self.fingers = []
+        #self.initfinger()
+        self.createfingertable()
 
         self.server = serverxmlrpc.ChordServerxmlrpc(self)
         self.server.start()
@@ -64,9 +81,14 @@ class LocalNode(BasicNode):
     def stopXmlRPCServer(self):
         self.server.stop()
 
+    def createfingertable(self):
+        for i in range(0, self.uid.idlength - 1):
+            #TODO erase all situation where LocalNode calcule again fingerkey (init_fingers() method)
+            self.fingers.append(Finger(self.calcfinger(i), BasicNode(self.ip, self.port)))
+
     def initfinger(self):
-        for i in range(0, self.uid.idlength):
-            self.finger.append(None)
+        for i in range(0, self.uid.idlength - 1):
+            self.fingers.append(Finger(self.calcfinger(i), self))
 
     def setsuccessor(self, successor):
         """
@@ -314,13 +336,13 @@ class LocalNode(BasicNode):
         return self.uid + pow(2, k)
 
     def printFingers(self):
-        for n, f in enumerate(self.finger):
-            #self.log.debug("TABLE: finger{0} : "
-            #    "- key: {2} - resp: {1}"
-            #    .format(n, f["resp"].uid, f["key"]))
-            if f["resp"].uid.value != self.lookupfinger(n, useOnlySucc=True).uid.value:
+        for n, f in enumerate(self.fingers):
+            print("TABLE: finger{0} : "
+                "- key: {2} - resp: {1}"
+                .format(n, f.node.uid, f.key))
+            #if f["resp"].uid.value != self.lookupfinger(n, useOnlySucc=True).uid.value:
                 #self.log.error("error between finger table and computed value")
-                continue
+                #continue
 
     def printRing(self):
         succ = self.successor
