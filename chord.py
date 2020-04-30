@@ -14,7 +14,7 @@ class BasicNode(object):
             ip = args[0]["ip"]
             port = args[0]["port"]
         else:
-            raise ValueError
+            raise ValueError("len args of {} unsupported".format(len(args)))
         self.ip = ip
         self.port = port
         #TODO:optimization with sys.intern() str of 64 char
