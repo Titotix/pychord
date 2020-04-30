@@ -80,6 +80,10 @@ class LocalNode(BasicNode):
         self.server = serverxmlrpc.ChordServerxmlrpc(self)
         self.server.start()
 
+    @property
+    def successor(self):
+        return self.fingers[0].node
+
     def stopXmlRPCServer(self):
         self.server.stop()
 
@@ -98,7 +102,7 @@ class LocalNode(BasicNode):
 
         @param successor: dict with ip and port as key
         """
-        self.successor = RemoteNode(successor["ip"], successor["port"])
+        self.fingers[0].setnode(RemoteNode(successor["ip"], successor["port"]))
     
     def setpredecessor(self, predecessor):
         """
