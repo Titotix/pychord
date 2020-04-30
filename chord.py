@@ -74,7 +74,6 @@ class LocalNode(BasicNode):
         BasicNode.__init__(self, ip, port)
         self.predecessor = BasicNode(self.ip, self.port)
         self.fingers = []
-        #self.initfinger()
         self.createfingertable()
 
         self.server = serverxmlrpc.ChordServerxmlrpc(self)
@@ -84,17 +83,24 @@ class LocalNode(BasicNode):
     def successor(self):
         return self.fingers[0].node
 
+    def asdict(self):
+        return {"ip": self.ip,
+                "port": self.port,
+                "uid": self.uid,
+                "succ": self.fingers[0].node.asdict(),
+                "prede": self.predecessor.asdict()}
+
     def stopXmlRPCServer(self):
         self.server.stop()
 
     def createfingertable(self):
-        for i in range(0, self.uid.idlength - 1):
-            #TODO erase all situation where LocalNode calcule again fingerkey (init_fingers() method)
-            self.fingers.append(Finger(self.calcfinger(i), BasicNode(self.ip, self.port)))
-
-    def initfinger(self):
-        for i in range(0, self.uid.idlength - 1):
-            self.fingers.append(Finger(self.calcfinger(i), self))
+        """
+        Create fingers table
+        Calculate all fingerkey and initializze all to self
+        """
+        node = BasicNode(self.ip, self.port)
+        for i in range(0, self.uid.idlength):
+            self.fingers.append(Finger(self.calcfinger(i), node))
 
     def setsuccessor(self, successor):
         """
