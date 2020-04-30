@@ -72,13 +72,7 @@ class Finger(object):
 class LocalNode(BasicNode):
     def __init__(self, ip, port):
         BasicNode.__init__(self, ip, port)
-        #TODO definition of successor in chord paper is different than the one I implemented, should be clarify
-        # refer to 4.2 consistent hashing
-        # -> False: successor of node is another node and successor of id is a node,
-        # those two successor are not distinguished in the paper
-        self.successor = None
-        self.predecessor = None
-
+        self.predecessor = BasicNode(self.ip, self.port)
         self.fingers = []
         #self.initfinger()
         self.createfingertable()
