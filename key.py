@@ -132,7 +132,7 @@ class Key(object):
         '''
         if len(self.value) != len(limit1) != len(limit2):
             #self.log.error("Unable to compare.")
-            raise Exception
+            raise ValueError("Unable to compare different length value and limit")
         if self.value == limit1 or self.value == limit2:
             return True
 
@@ -148,7 +148,7 @@ class Key(object):
                 return False
         else:
             # limit1 == limit2
-            raise Exception
+            raise ValueError("isbetween: limit1 == limit2")
 
 class Uid(Key):
     
