@@ -39,6 +39,15 @@ class BasicNode(object):
     def getUid(self):
         return self.uid
 
+    def asdict(self):
+        """
+        Creates and returns a dict with attr of the instance
+        The dict can be used in rpc args
+        """
+        return {"ip": self.ip,
+                "port": self.port,
+                "uid": self.uid.value}
+
 class RemoteNode(BasicNode):
     def __init__(self, *args):
         super(RemoteNode, self).__init__(*args)
@@ -86,7 +95,7 @@ class LocalNode(BasicNode):
     def asdict(self):
         return {"ip": self.ip,
                 "port": self.port,
-                "uid": self.uid,
+                "uid": self.uid.value,
                 "succ": self.fingers[0].node.asdict(),
                 "prede": self.predecessor.asdict()}
 
@@ -127,7 +136,7 @@ class LocalNode(BasicNode):
         #self.log.debug("{} want to join {}".format(newnode.uid.value, self.uid.value))
         if newnode.uid.value != self.uid.value:
             # TODO optim : no need to update all node of the ring at each new node
-            self.updatesucc({"ip": newnode.ip, "port": newnode.port})
+            self.updatesucc(newnode.asdict())
             #self.updatefinger(newnode, self)
         else:
 
