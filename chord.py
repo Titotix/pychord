@@ -57,9 +57,17 @@ class Finger(object):
         # self.node can be either RemoteNode or LocalNode
         # according to who's node is it
         #TODO: find a way to abstract access to node's method wether it's Remote or not
-        if isinstance(respnode, dict):
-            respnode = RemoteNode(respnode["ip"], respnode["port"])
-        self.node = respnode
+        self.setnode(respnode)
+
+    def setnode(self, node):
+        if isinstance(node, dict):
+            self.node = RemoteNode(node["ip"], node["port"])
+        elif isinstance(node, BasicNode):
+            self.node = RemoteNode(node.ip, node.port)
+        elif isisntance(node, RemoteNode):
+            self.node = node
+        else:
+            raise TypeError("Finger.setnode() accept dict, BasicNode or RemoteNode")
 
 class LocalNode(BasicNode):
     def __init__(self, ip, port):
