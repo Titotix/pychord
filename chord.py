@@ -346,7 +346,7 @@ class LocalNode(BasicNode):
         @param k: from 0 to (m - 1)
         '''
         if k > self.uid.idlength - 1:
-            raise ValueError
+            raise ValueError("calcfinger: value above {} are not accepted".format(self.idlength))
         return self.uid + pow(2, k)
 
     def printFingers(self):
