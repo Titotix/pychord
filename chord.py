@@ -169,21 +169,21 @@ class LocalNode(BasicNode):
         else:
             self.successor.rpcProxy.updatesucc(newnode)
 
-    def updatefinger(self, newnode, firstnode):
+    def updatefinger(self, firstnode):
         '''
-        UPdate finger table for all ring in a clockwise around successor fashion
+        Update finger table
+        Dummy update wich loookup all fingerkey
+        When finished, propagate updatefinger to all node of the ring
+        /!\ Very costly in rpc /!\
         finger is an array of dict {resp, key}
             `resp` is the Node responsible for `key`
-        @param newnode: new node which imply this update
         @param firstnode: node which launch the update
         '''
         for i in range(0, self.uid.idlength):
-            fingerkey = self.calcfinger(i)
-            resp = self.lookupWithSucc(fingerkey)
-            self.finger[i] = {"resp": resp, "key": Key(fingerkey)}
-            #self.finger[i] = self.lookupfinger(i, useOnlySucc=True)
-        if firstnode is not self.successor:
-            self.successor.updatefinger(newnode, firstnode)
+            resp = self.lookupWithSucc(self.fingers[i].key)
+            self.fingers[i].setnode(resp)
+        if firstnode.uid != self.fingers[0].node.uid:
+            self.fingers[0].node.rpcProxy.updatefinger(firstnode)
 
     def lookupWithSucc(self, key):
         """
