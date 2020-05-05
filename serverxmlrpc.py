@@ -5,15 +5,18 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
     rpc_paths = ('/chord',)
 
 class ChordServerxmlrpc(threading.Thread):
-    def __init__(self, node):
+    def __init__(self, node, quiet=True):
+        #TODO composition with threading.Thread rather than inheritance
         threading.Thread.__init__(self)
         self.ip = node.ip
         self.port = node.port
         self.node = node
+        logReq = not quiet
         self.tcpserver = SimpleXMLRPCServer(
                 (self.ip, self.port),
                 allow_none=True,
-                requestHandler=RequestHandler
+                requestHandler=RequestHandler,
+                logRequests=logReq
         )
 
     def run(self):
