@@ -176,6 +176,10 @@ class LocalNode(BasicNode):
         else:
             self.successor.rpcProxy.updatesucc(newnode)
 
+    def join(self, node):
+        self.init_fingers(node)
+        self.update_others()
+
     def init_fingers(self, existingnode):
         log.debug("%s - init_fingers with %s" %(self.uid, existingnode.uid))
         fingerkey = self.fingers[0].key
