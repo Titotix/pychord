@@ -27,22 +27,6 @@ class BasicNode(object):
         #TODO:optimization with sys.intern() str of 64 char
         self.uid = Uid(self.ip + ":" + repr(self.port))
 
-        # self.logging
-        #TODO This self.log sucks
-        #self.log = logging.getLogger(repr(self.uid))
-        #self.log.setLevel(logging.INFO)
-        #ch = logging.StreamHandler(sys.stdout)
-        #ch.setLevel(logging.DEBUG)
-        #formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
-        #ch.setFormatter(formatter)
-        #self.log.addHandler(ch)
-
-        #self.log.debug("node creation: uid={}".format(self.uid.value))
-
-    #def __repr__(self):
-    #    #TODO: no hardcoded class name
-    #    return "<class BasicNode - {hash}>".format(hash=self.uid)
-
     def getUid(self):
         return self.uid
 
@@ -147,23 +131,27 @@ class LocalNode(BasicNode):
         '''
         if isinstance(newnode, dict):
             newnode = BasicNode(newnode["ip"], newnode["port"])
-        #self.log.debug("{} want to join {}".format(newnode.uid.value, self.uid.value))
         if newnode.uid.value != self.uid.value:
             # TODO optim : no need to update all node of the ring at each new node
             self.updatesucc(newnode.asdict())
             #self.updatefinger(newnode, self)
         else:
 
-            #self.log.error("Same uid than contacted node")
             raise Exception
 
     def updatesucc(self, newnode):
         """
         Outdated method
+        Update successor with the node wich just join if relevant
+        If not, propagate updatesucc to its own successor
         """
-        #if newnode.uid.value == self.uid.value:
-        #    raise Exception
         newnodeObj = BasicNode(newnode["ip"], newnode["port"])
+
+        #TODO: check if this can happen and in wich case
+        # as it should not happen if updatesucc work as expected
+        if newnode.uid.value == self.uid.value:
+            raise Exception
+
         if self.successor is None:
             self.setsuccessor(newnode)
             self.successor.rpcProxy.setsuccessor({"ip":self.ip, "port":self.port})
