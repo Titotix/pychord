@@ -4,49 +4,38 @@ import tests.commons
 
 class TestInitFingers(unittest.TestCase):
     def setUp(self):
-        self.ip = "127.0.0.1"
-        self.port = [2221, 2222]
-        self.existingnode = chord.LocalNode(self.ip, self.port[0])
-        self.joiningnode = chord.LocalNode(self.ip, self.port[1])
-        self.existingnoderemote = chord.RemoteNode(self.ip, self.port[0])
+        self.nodes = tests.commons.createlocalnodes(2)
 
     def tearDown(self):
-        self.existingnode.stopXmlRPCServer()
-        self.joiningnode.stopXmlRPCServer()
+        tests.commons.stoplocalnodes(self.nodes)
 
     def test_init_fingers(self):
-        self.joiningnode.init_fingers(self.existingnoderemote)
-        self.assertEqual(self.joiningnode.successor.uid, self.existingnode.uid)
-        self.assertEqual(self.existingnode.successor.uid, self.joiningnode.uid)
-        self.assertEqual(self.existingnode.predecessor.uid, self.joiningnode.uid)
-        self.assertEqual(self.joiningnode.predecessor.uid, self.existingnode.uid)
-        for i in range(0, self.existingnode.uid.idlength):
-            if self.joiningnode.fingers[i].key.isbetween(self.joiningnode.uid, self.existingnode.uid):
-                self.assertEqual(self.joiningnode.fingers[i].node.uid, self.existingnode.uid)
+        self.nodes[1].init_fingers(chord.RemoteNode(self.nodes[0].asdict()))
+        self.assertEqual(self.nodes[1].successor.uid, self.nodes[0].uid)
+        self.assertEqual(self.nodes[0].successor.uid, self.nodes[1].uid)
+        self.assertEqual(self.nodes[0].predecessor.uid, self.nodes[1].uid)
+        self.assertEqual(self.nodes[1].predecessor.uid, self.nodes[0].uid)
+        for i in range(0, self.nodes[0].uid.idlength):
+            if self.nodes[1].fingers[i].key.isbetween(self.nodes[1].uid, self.nodes[0].uid):
+                self.assertEqual(self.nodes[1].fingers[i].node.uid, self.nodes[0].uid)
             else:
-                self.assertEqual(self.joiningnode.fingers[i].node.uid, self.joiningnode.uid)
+                self.assertEqual(self.nodes[1].fingers[i].node.uid, self.nodes[1].uid)
 
 class TestJoinTwoNodeRing(unittest.TestCase):
     def setUp(self):
-        self.ip = "127.0.0.1"
-        self.port = [2221, 2222]
-        self.existingnode = chord.LocalNode(self.ip, self.port[0])
-        self.joiningnode = chord.LocalNode(self.ip, self.port[1])
-        self.existingnoderemote = chord.RemoteNode(self.ip, self.port[0])
+        self.nodes = tests.commons.createlocalnodes(2)
 
     def tearDown(self):
-        self.existingnode.stopXmlRPCServer()
-        self.joiningnode.stopXmlRPCServer()
+        tests.commons.stoplocalnodes(self.nodes)
 
     def test_join(self):
-        self.joiningnode.join(self.existingnoderemote)
-        self.assertEqual(self.joiningnode.successor.uid, self.existingnode.uid)
-        self.assertEqual(self.existingnode.successor.uid, self.joiningnode.uid)
-        self.assertEqual(self.existingnode.predecessor.uid, self.joiningnode.uid)
-        self.assertEqual(self.joiningnode.predecessor.uid, self.existingnode.uid)
-        nodelist = [self.existingnode, self.joiningnode]
-        for k, node in enumerate(nodelist):
-            othernode = nodelist[(k+1) % 2]
+        self.nodes[1].join(chord.RemoteNode(self.nodes[0].asdict()))
+        self.assertEqual(self.nodes[1].successor.uid, self.nodes[0].uid)
+        self.assertEqual(self.nodes[0].successor.uid, self.nodes[1].uid)
+        self.assertEqual(self.nodes[0].predecessor.uid, self.nodes[1].uid)
+        self.assertEqual(self.nodes[1].predecessor.uid, self.nodes[0].uid)
+        for k, node in enumerate(self.nodes):
+            othernode = self.nodes[(k+1) % 2]
             for i in range(0, node.uid.idlength):
                 if node.fingers[i].key.isbetween(node.uid, othernode.uid):
                     self.assertEqual(

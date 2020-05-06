@@ -33,76 +33,54 @@ class TestFindSuccessorTwoNode(unittest.TestCase):
     Fingers of the ring are set "manually" not with chord algorithm
     """
     def setUp(self):
-        self.ip = "127.0.0.1"
-        existingnode_port = random.randint(1025, 65336)
-        joiningnode_port = random.randint(1025, 65335)
-        if joiningnode_port == existingnode_port:
-            joiningnode_port += 1
-        self.existingnode = chord.LocalNode(self.ip, existingnode_port)
-        self.joiningnode = chord.LocalNode(self.ip, joiningnode_port)
+        self.nodes = tests.commons.createlocalnodes(
+                2,
+                setfingers=True,
+                setpredecessor=True
+        )
 
     def tearDown(self):
-        self.existingnode.stopXmlRPCServer()
-        self.joiningnode.stopXmlRPCServer()
+        tests.commons.stoplocalnodes(self.nodes)
 
     def test_with_two_node(self):
-        tests.commons.hardsetfingers(
-                self.existingnode,
-                self.joiningnode
-        )
 
-        keytolookfor = self.existingnode.uid - 1
+        keytolookfor = self.nodes[0].uid - 1
         self.assertEqual(
-                self.existingnode.find_successor(keytolookfor)["uid"],
-                self.existingnode.uid.value
+                self.nodes[0].find_successor(keytolookfor)["uid"],
+                self.nodes[0].uid.value
         )
-        keytolookfor = self.existingnode.uid + 1
+        keytolookfor = self.nodes[0].uid + 1
         self.assertEqual(
-                self.existingnode.find_successor(keytolookfor)["uid"],
-                self.joiningnode.uid.value
+                self.nodes[0].find_successor(keytolookfor)["uid"],
+                self.nodes[1].uid.value
         )
+        #TODO add test from nodes[1]
 
 class TestFindSuccessorThreeNode(unittest.TestCase):
     def setUp(self):
-        self.ip = "127.0.0.1"
-        existingnode_port = random.randint(1025, 65336)
-        joiningnode_port = random.randint(1025, 65335)
-        thirdnode_port = random.randint(1025, 65334)
-        if joiningnode_port == existingnode_port:
-            joiningnode_port += 1
-        if thirdnode_port == existingnode_port\
-                or thirdnode_port == joiningnode_port:
-            joiningnode_port += 2
-        self.existingnode = chord.LocalNode(self.ip, existingnode_port)
-        self.joiningnode = chord.LocalNode(self.ip, joiningnode_port)
-        self.thirdnode = chord.LocalNode(self.ip, thirdnode_port)
-        print("Tested node port: %i - %i - %i" % (existingnode_port, joiningnode_port, thirdnode_port))
-
-    def tearDown(self):
-        self.existingnode.stopXmlRPCServer()
-        self.joiningnode.stopXmlRPCServer()
-        self.thirdnode.stopXmlRPCServer()
-
-    def test_with_three_node(self):
-        tests.commons.hardsetfingers(
-                self.existingnode,
-                self.joiningnode,
-                self.thirdnode
+        self.nodes = tests.commons.createlocalnodes(
+                3,
+                setfingers=True,
+                setpredecessor=True
         )
 
-        keytolookfor = self.existingnode.uid - 1
-        for node in [self.existingnode, self.joiningnode, self.thirdnode]:
+    def tearDown(self):
+        tests.commons.stoplocalnodes(self.nodes)
+
+    def test_with_three_node(self):
+        keytolookfor = self.nodes[0].uid - 1
+        for node in self.nodes:
             self.assertEqual(
                     node.find_successor(keytolookfor)["uid"],
-                    self.existingnode.uid.value
+                    self.nodes[0].uid.value
             )
 
-        keytolookfor = self.existingnode.uid + 1
-        if self.existingnode.uid.isbetween(self.joiningnode.uid, self.thirdnode.uid):
-            answer = self.thirdnode.uid.value
+        keytolookfor = self.nodes[0].uid + 1
+        if self.nodes[0].uid.isbetween(self.nodes[1].uid, self.nodes[2].uid):
+            answer = self.nodes[2].uid.value
         else:
-            answer = self.joiningnode.uid.value
-        for node in [self.existingnode, self.joiningnode, self.thirdnode]:
+            answer = self.nodes[1].uid.value
+        for node in [self.nodes[0], self.nodes[1], self.nodes[2]]:
             self.assertEqual(
                     node.find_successor(keytolookfor)["uid"],
                     answer
