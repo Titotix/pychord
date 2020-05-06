@@ -191,6 +191,26 @@ class LocalNode(BasicNode):
                         self.fingers[i+1].key)
                 self.fingers[i+1].setnode(nextfingersucc)
 
+    def update_others(self):
+        for i in range(0, self.uid.idlength):
+            log.debug("%s - update_others for i=%i" %(self.uid, i))
+            predenode = self.find_predecessor(self.uid - pow(2, i))
+            RemoteNode(predenode).rpcProxy.update_finger_table(self.asdict(), i)
+
+    def update_finger_table(self, callingnode, i):
+        callingnode = BasicNode(callingnode)
+        #update_finger_table looped over the ring and came back to self
+        if callingnode.uid == self.uid:
+            return
+        log.debug("%s - update_finger_table with node '%s' for i=%i" %(self.uid, callingnode.uid, i))
+        #TODO check if key and node uid of the same finger could be equal and then lead to a exception in isbetween
+        if callingnode.uid.isbetween(self.fingers[i].key, self.fingers[i].node.uid):
+            log.debug("%s - update_finger_table:  callingnode uid is between self.uid and fingers(%i). node.uid" %(self.uid, i))
+            self.fingers[i].setnode(callingnode)
+            #TODO optim : self knows fingers[i] uid so it can calculate if predecessor has chance or not to have to update his finger(i)
+            if self.predecessor.uid != callingnode.uid: # dont rpc on callingnode it self
+                self.predecessor.rpcProxy.update_finger_table(callingnode.asdict(), i)
+
     def find_successor(self, key):
         """
         Lookup method for successor of key
