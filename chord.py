@@ -5,6 +5,13 @@ import clientxmlrpc
 
 from key import Key, Uid
 
+log = logging.getLogger()
+log.setLevel(logging.DEBUG)
+ch = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter(' %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+log.addHandler(ch)
+
 class BasicNode(object):
     def __init__(self, *args):
         if len(args) == 2:
@@ -168,6 +175,57 @@ class LocalNode(BasicNode):
             self.successor.rpcProxy.setsuccessor({"ip": newnodeSuccip, "port": newnodeSuccport})
         else:
             self.successor.rpcProxy.updatesucc(newnode)
+
+    def find_successor(self, key):
+        """
+        Lookup method for successor of key
+        Use predecessor, successor and fingers information
+        Should produce the same answer than lookupWithSucc
+        """
+        if isinstance(key, dict):
+            key = key["value"]
+        prednode = self.find_predecessor(key)
+        #TODO: avoird rpc to it self in case predkey is actually self
+        #if self.ip != predkey["ip"] or self.ip == predkey["ip"] and self.port != predkey["port"]:
+        return prednode["succ"]
+
+    def find_predecessor(self, key):
+        if isinstance(key, dict):
+            key = key["value"]
+        key = Key(key)
+        log.debug("%s - find_predecessor for '%s'" %(self.uid, key.value))
+        if self.uid == self.fingers[0].node.uid:
+            return self.asdict()
+        if key.isbetween(self.uid, self.fingers[0].node.uid):
+            return self.asdict()
+        #TODO IDEA maybe: overwrite dispatch on xmlrpc server
+        # then it is possible to dispatch on specific method for rpc
+        # so in the next line case we are not force to transform cloPrecedFinger into a RemoteNode
+        #TODO avoid casting directly in RemoteNode because we loose potential succ/prede info from the original dict
+        cloPrecedFinger= RemoteNode(self.closest_preceding_finger(key.value))
+        cloPrecedFingerSucc = BasicNode(cloPrecedFinger.rpcProxy.getsuccessor())
+        #TODO add uid info to return dict of rpc
+        if cloPrecedFinger.uid == cloPrecedFingerSucc.uid:
+            #TODO Here, self noticed that node has wrong fingers, should I correct it ?
+            resdict = cloPrecedFinger.asdict()
+            resdict = resdict["succ"] = cloPrecedFingerSucc.asdict()
+            return resdict
+        while not key.isbetween(cloPrecedFinger.uid, cloPrecedFingerSucc.uid):
+            cloPrecedFingerDict = cloPrecedFinger.rpcProxy.closest_preceding_finger(key.value)
+            if hasattr(cloPrecedFingerDict, "succ"):
+                #TODO in test, is this if usefull ?
+                breakpoint() #probably not...
+                cloPrecedFingerSucc = RemoteNode(cloPrecedFingerDict["succ"])
+            else:
+                cloPrecedFinger = RemoteNode(cloPrecedFingerDict)
+                #TODO abstract routing if RemoteNode is actually self do not RPC call method before rpcProxy ?
+                if cloPrecedFinger.uid == self.uid:
+                    cloPrecedFingerSucc = BasicNode(self.getsuccessor())
+                else:
+                    cloPrecedFingerSucc = BasicNode(cloPrecedFinger.rpcProxy.getsuccessor())
+        resdict = cloPrecedFinger.asdict()
+        resdict["succ"] = cloPrecedFingerSucc.asdict()
+        return resdict
 
     def closest_preceding_finger(self, keyvalue):
         for i in range(self.uid.idlength - 1, -1, -1):
