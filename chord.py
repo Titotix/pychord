@@ -176,6 +176,21 @@ class LocalNode(BasicNode):
         else:
             self.successor.rpcProxy.updatesucc(newnode)
 
+    def init_fingers(self, existingnode):
+        log.debug("%s - init_fingers with %s" %(self.uid, existingnode.uid))
+        fingerkey = self.fingers[0].key
+        self.setsuccessor(existingnode.rpcProxy.find_successor(fingerkey))
+        self.setpredecessor(self.fingers[0].node.rpcProxy.getpredecessor())
+        self.predecessor.rpcProxy.setsuccessor(self.asdict()) # added compare to paper
+        self.fingers[0].node.rpcProxy.setpredecessor(self.asdict())
+        for i in range(0, self.uid.idlength - 1):
+            if self.fingers[i + 1].key.isbetween(self.fingers[i].key, self.fingers[i].node.uid): #changed from paper's algo which use self.uid in place of fingers[I].key
+                self.fingers[i + 1].setnode(self.fingers[i].node)
+            else:
+                nextfingersucc = existingnode.rpcProxy.find_successor(
+                        self.fingers[i+1].key)
+                self.fingers[i+1].setnode(nextfingersucc)
+
     def find_successor(self, key):
         """
         Lookup method for successor of key
