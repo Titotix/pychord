@@ -169,6 +169,22 @@ class LocalNode(BasicNode):
         else:
             self.successor.rpcProxy.updatesucc(newnode)
 
+    def closest_preceding_finger(self, keyvalue):
+        for i in range(self.uid.idlength - 1, -1, -1):
+            #TODO aggregate all usecase of isbetween and handle genericly the limit1 == limit2 exception ?
+            if self.uid == keyvalue:
+                #TODO I DONT KNOW what to do!!!
+                continue
+            if self.fingers[i].node.uid == self.uid: # (1)
+                if self.successor.uid == self.uid:
+                    return self.asdict() #self is alone on the ring
+                if Key(keyvalue).isbetween(self.uid, self.successor.uid):
+                    return self.asdict()
+                continue
+            if self.fingers[i].node.uid.isbetween(self.uid, keyvalue): # change from papaer algo: fingers[i].key in place of self.uid
+                return self.fingers[i].node.asdict()
+        return self.asdict() # Should not happen because of (1), not sure sought
+
     def updatefinger(self, firstnode):
         '''
         Update finger table
