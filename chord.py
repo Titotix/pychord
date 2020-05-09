@@ -14,6 +14,10 @@ log.addHandler(ch)
 
 class BasicNode(object):
     def __init__(self, *args):
+        """
+        params are either ip and port OR a dict with keys ip and port 
+        {"ip":<ip>, "port": <port>}
+        """
         if len(args) == 2:
             ip = args[0]
             port = args[1]
@@ -49,6 +53,9 @@ class NodeInterface(BasicNode):
     if @param localNode is provided,
     the NodeInterface object uses methods from localNode
     if not, RPC are done on provided ip and port (throught *args, see BasicNode __init__())
+
+    args and localNode are exclusive arguments
+    @param args: directly passed to BasicNode constructor
     """
     def __init__(self, *args, localNode=None):
         if not localNode:
@@ -81,7 +88,16 @@ class RemoteNode(BasicNode):
 
 
 class Finger(object):
-    def __init__(self, key, respnode):
+    def __init__(self, key, originNode, respNode):
+        """
+        @param originNode
+        @param respNode: dict or NodeInterface
+        """
+        if isinstance(originNode, LocalNode):
+            self.originNode = originNode
+        else:
+            raise TypeError("originNode have to be LocalNode")
+
         #set key attr
         if isinstance(key, str):
             self.key = Key(key)
@@ -90,20 +106,26 @@ class Finger(object):
         else:
             raise TypeError("key type not accepted. Support str and Key")
 
-        # self.node can be either RemoteNode or LocalNode
-        # according to who's node is it
-        #TODO: find a way to abstract access to node's method wether it's Remote or not
-        self.setnode(respnode)
+        self.setRespNode(respNode)
 
-    def setnode(self, node):
-        if isinstance(node, dict):
-            self.node = RemoteNode(node["ip"], node["port"])
-        elif isinstance(node, BasicNode):
-            self.node = RemoteNode(node.ip, node.port)
-        elif isisntance(node, RemoteNode):
-            self.node = node
+    @property
+    def node(self):
+        return self.respNode
+
+    def createNodeInterface(self, respNodedict):
+        if respNodedict["ip"] == self.originNode.ip\
+                and respNodedict["port"] == self.originNode.port:
+            return NodeInterface(localNode=self.node)
         else:
-            raise TypeError("Finger.setnode() accept dict, BasicNode or RemoteNode")
+            return NodeInterface(respNodedict)
+
+    def setRespNode(self, respNode):
+        if isinstance(respNode, dict):
+            self.respNode = self.createNodeInterface(respNode)
+        elif isinstance(respNode, NodeInterface):
+            self.respNode = respNode
+        else:
+            raise TypeError("Finger.setRespNode() accept dict and NodeInterface")
 
 class LocalNode(BasicNode):
     def __init__(self, ip, port):
@@ -134,9 +156,9 @@ class LocalNode(BasicNode):
         Create fingers table
         Calculate all fingerkey and initializze all to self
         """
-        node = BasicNode(self.ip, self.port)
+        selfinterface = NodeInterface(localNode=self)
         for i in range(0, self.uid.idlength):
-            self.fingers.append(Finger(self.calcfinger(i), node))
+            self.fingers.append(Finger(self.calcfinger(i), self, selfinterface))
 
     def setsuccessor(self, successor):
         """
@@ -144,7 +166,7 @@ class LocalNode(BasicNode):
 
         @param successor: dict with ip and port as key
         """
-        self.fingers[0].setnode(RemoteNode(successor["ip"], successor["port"]))
+        self.fingers[0].setRespNode(self.getNodeInterface(successor))
     
     def setpredecessor(self, predecessor):
         """
@@ -218,16 +240,16 @@ class LocalNode(BasicNode):
         log.debug("%s - init_fingers with %s" %(self.uid, existingnode.uid))
         fingerkey = self.fingers[0].key
         self.setsuccessor(existingnode.rpcProxy.find_successor(fingerkey))
-        self.setpredecessor(self.fingers[0].node.rpcProxy.getpredecessor())
+        self.setpredecessor(self.fingers[0].respNode.methodProxy.getpredecessor())
         self.predecessor.rpcProxy.setsuccessor(self.asdict()) # added compare to paper
-        self.fingers[0].node.rpcProxy.setpredecessor(self.asdict())
+        self.fingers[0].respNode.methodProxy.setpredecessor(self.asdict())
         for i in range(0, self.uid.idlength - 1):
             if self.fingers[i + 1].key.isbetween(self.fingers[i].key, self.fingers[i].node.uid): #changed from paper's algo which use self.uid in place of fingers[I].key
-                self.fingers[i + 1].setnode(self.fingers[i].node)
+                self.fingers[i + 1].setRespNode(self.fingers[i].respNode)
             else:
                 nextfingersucc = existingnode.rpcProxy.find_successor(
                         self.fingers[i+1].key)
-                self.fingers[i+1].setnode(nextfingersucc)
+                self.fingers[i+1].setRespNode(nextfingersucc)
 
     def update_others(self):
         for i in range(0, self.uid.idlength):
@@ -244,7 +266,7 @@ class LocalNode(BasicNode):
         #TODO check if key and node uid of the same finger could be equal and then lead to a exception in isbetween
         if callingnode.uid.isbetween(self.fingers[i].key, self.fingers[i].node.uid):
             log.debug("%s - update_finger_table:  callingnode uid is between self.uid and fingers(%i). node.uid" %(self.uid, i))
-            self.fingers[i].setnode(callingnode)
+            self.fingers[i].setRespNode(callingnode.asdict())
             #TODO optim : self knows fingers[i] uid so it can calculate if predecessor has chance or not to have to update his finger(i)
             if self.predecessor.uid != callingnode.uid: # dont rpc on callingnode it self
                 self.predecessor.rpcProxy.update_finger_table(callingnode.asdict(), i)
@@ -328,9 +350,9 @@ class LocalNode(BasicNode):
         '''
         for i in range(0, self.uid.idlength):
             resp = self.lookupWithSucc(self.fingers[i].key)
-            self.fingers[i].setnode(resp)
-        if firstnode.uid != self.fingers[0].node.uid:
-            self.fingers[0].node.rpcProxy.updatefinger(firstnode)
+            self.fingers[i].setRespNode(resp)
+        if firstnode.uid != self.fingers[0].respNode.uid:
+            self.fingers[0].respNode.rpcProxy.updatefinger(firstnode)
 
     def lookupWithSucc(self, key):
         """

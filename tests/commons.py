@@ -71,9 +71,9 @@ def _setfingersTwoNode(nodelist):
         othernode = nodelist[(k+1) % len(nodelist)]
         for i in range(0, node.uid.idlength):
             if node.fingers[i].key.isbetween(node.uid, othernode.uid):
-                node.fingers[i].setnode(othernode)
+                node.fingers[i].setRespNode(othernode.asdict())
             else:
-                node.fingers[i].setnode(node)
+                node.fingers[i].setRespNode(node.asdict())
 
 def _setfingersThreeNode(nodelist):
     for k, node in enumerate(nodelist):
@@ -87,11 +87,11 @@ def _setfingersThreeNode(nodelist):
             nodepredecessor = node2
         for i in range(0, node.uid.idlength):
             if node.fingers[i].key.isbetween(node.uid, nodesuccessor.uid):
-                node.fingers[i].setnode(nodesuccessor)
+                node.fingers[i].setRespNode(nodesuccessor.asdict())
             elif node.fingers[i].key.isbetween(nodesuccessor.uid, nodepredecessor.uid):
-                node.fingers[i].setnode(nodepredecessor)
+                node.fingers[i].setRespNode(nodepredecessor.asdict())
             else:
-                node.fingers[i].setnode(node)
+                node.fingers[i].setRespNode(node.asdict())
 
 def hardsetpredecessor(nodelist):
     if len(nodelist) == 2:
