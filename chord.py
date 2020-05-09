@@ -233,7 +233,7 @@ class LocalNode(BasicNode):
         for i in range(0, self.uid.idlength):
             log.debug("%s - update_others for i=%i" %(self.uid, i))
             predenode = self.find_predecessor(self.uid - pow(2, i))
-            RemoteNode(predenode).rpcProxy.update_finger_table(self.asdict(), i)
+            self.getNodeInterface(predenode).methodProxy.update_finger_table(self.asdict(), i)
 
     def update_finger_table(self, callingnode, i):
         callingnode = BasicNode(callingnode)
