@@ -39,10 +39,46 @@ class BasicNode(object):
                 "port": self.port,
                 "uid": self.uid.value}
 
+class NodeInterface(BasicNode):
+    """
+    Interface to call method on specified node
+    When doing RPC on a node N, N could be self.
+    This class has the purpose  to abstract the choice of doing straightforward
+    call on method if the node is self or to do RPC if it's a distant one
+
+    if @param localNode is provided,
+    the NodeInterface object uses methods from localNode
+    if not, RPC are done on provided ip and port (throught *args, see BasicNode __init__())
+    """
+    def __init__(self, *args, localNode=None):
+        if not localNode:
+            super(NodeInterface, self).__init__(*args)
+            RemoteCallInterface.__init__(self)
+        elif len(args) == 0:
+            super(NodeInterface, self).__init__(localNode.ip, localNode.port)
+            LocalCallInterface.__init__(self, localNode)
+        else:
+            raise ValueError("localNode and *args are exclusive arguments")
+
+class RemoteCallInterface(object):
+    """
+    Interface for RPC strategy for a NodeInterface
+    """
+    def __init__(self):
+        self.methodProxy = clientxmlrpc.ChordClientxmlrpcProxy(self.ip, self.port)
+
+class LocalCallInterface(object):
+    """
+    Interface for local procedures call strategy for a NodeInterface
+    """
+    def __init__(self, localNode):
+        self.methodProxy = localNode
+
 class RemoteNode(BasicNode):
     def __init__(self, *args):
         super(RemoteNode, self).__init__(*args)
         self.rpcProxy = clientxmlrpc.ChordClientxmlrpcProxy(self.ip, self.port)
+
 
 class Finger(object):
     def __init__(self, key, respnode):
@@ -123,6 +159,16 @@ class LocalNode(BasicNode):
 
     def getpredecessor(self):
         return self.predecessor.asdict()
+
+    def getNodeInterface(self, nodedict):
+        """
+        Return a NodeInterface object
+        Compare self and nodedict to provide localNode or not
+        """
+        if nodedict["ip"] == self.ip and nodedict["port"] == self.port:
+            return NodeInterface(localNode=self)
+        else:
+            return NodeInterface(nodedict)
 
     def addToRing(self, newnode):
         '''
