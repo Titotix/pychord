@@ -49,12 +49,40 @@ class TestFindSuccessorTwoNode(unittest.TestCase):
                 self.nodes[0].find_successor(keytolookfor)["uid"],
                 self.nodes[0].uid.value
         )
+        self.assertEqual(
+                self.nodes[1].find_successor(keytolookfor)["uid"],
+                self.nodes[0].uid.value
+        )
+
         keytolookfor = self.nodes[0].uid + 1
         self.assertEqual(
                 self.nodes[0].find_successor(keytolookfor)["uid"],
                 self.nodes[1].uid.value
         )
-        #TODO add test from nodes[1]
+        self.assertEqual(
+                self.nodes[1].find_successor(keytolookfor)["uid"],
+                self.nodes[1].uid.value
+        )
+
+        keytolookfor = self.nodes[1].uid - 1
+        self.assertEqual(
+                self.nodes[0].find_successor(keytolookfor)["uid"],
+                self.nodes[1].uid.value
+        )
+        self.assertEqual(
+                self.nodes[1].find_successor(keytolookfor)["uid"],
+                self.nodes[1].uid.value
+        )
+
+        keytolookfor = self.nodes[1].uid + 1
+        self.assertEqual(
+                self.nodes[0].find_successor(keytolookfor)["uid"],
+                self.nodes[0].uid.value
+        )
+        self.assertEqual(
+                self.nodes[1].find_successor(keytolookfor)["uid"],
+                self.nodes[0].uid.value
+        )
 
 class TestFindSuccessorThreeNode(unittest.TestCase):
     def setUp(self):
