@@ -262,7 +262,7 @@ class LocalNode(BasicNode):
                 if Key(keyvalue).isbetween(self.uid, self.successor.uid):
                     return self.asdict()
                 continue
-            if self.fingers[i].respNode.uid.isbetween(self.uid, keyvalue): # change from papaer algo: fingers[i].key in place of self.uid
+            if self.fingers[i].respNode.uid.isbetween(self.uid, keyvalue):
                 return self.fingers[i].respNode.asdict()
         return self.asdict() # Should not happen because of (1), not sure sought
 
