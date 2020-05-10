@@ -90,10 +90,6 @@ class Finger(object):
 
         self.setRespNode(respNode)
 
-    @property
-    def node(self):
-        return self.respNode
-
     def setRespNode(self, respNode):
         if isinstance(respNode, dict):
             self.respNode = self.originNode.getNodeInterface(respNode)
@@ -114,13 +110,13 @@ class LocalNode(BasicNode):
 
     @property
     def successor(self):
-        return self.fingers[0].node
+        return self.fingers[0].respNode
 
     def asdict(self):
         return {"ip": self.ip,
                 "port": self.port,
                 "uid": self.uid.value,
-                "succ": self.fingers[0].node.asdict(),
+                "succ": self.fingers[0].respNode.asdict(),
                 "prede": self.predecessor.asdict()}
 
     def stopXmlRPCServer(self):
@@ -153,7 +149,7 @@ class LocalNode(BasicNode):
         self.predecessor = self.getNodeInterface(predecessor)
 
     def getsuccessor(self):
-        return self.fingers[0].node.asdict()
+        return self.fingers[0].respNode.asdict()
 
     def getpredecessor(self):
         return self.predecessor.asdict()
@@ -220,7 +216,7 @@ class LocalNode(BasicNode):
         self.predecessor.methodProxy.setsuccessor(self.asdict()) # added compare to paper
         self.fingers[0].respNode.methodProxy.setpredecessor(self.asdict())
         for i in range(0, self.uid.idlength - 1):
-            if self.fingers[i + 1].key.isbetween(self.fingers[i].key, self.fingers[i].node.uid): #changed from paper's algo which use self.uid in place of fingers[I].key
+            if self.fingers[i + 1].key.isbetween(self.fingers[i].key, self.fingers[i].respNode.uid): #changed from paper's algo which use self.uid in place of fingers[I].key
                 self.fingers[i + 1].setRespNode(self.fingers[i].respNode)
             else:
                 nextfingersucc = existingnode.methodProxy.find_successor(
@@ -240,7 +236,7 @@ class LocalNode(BasicNode):
             return
         log.debug("%s - update_finger_table with node '%s' for i=%i" %(self.uid, callingnode.uid, i))
         #TODO check if key and node uid of the same finger could be equal and then lead to a exception in isbetween
-        if callingnode.uid.isbetween(self.fingers[i].key, self.fingers[i].node.uid):
+        if callingnode.uid.isbetween(self.fingers[i].key, self.fingers[i].respNode.uid):
             log.debug("%s - update_finger_table:  callingnode uid is between self.uid and fingers(%i). node.uid" %(self.uid, i))
             self.fingers[i].setRespNode(callingnode.asdict())
             #TODO optim : self knows fingers[i] uid so it can calculate if predecessor has chance or not to have to update his finger(i)
@@ -265,9 +261,9 @@ class LocalNode(BasicNode):
             key = key["value"]
         key = Key(key)
         log.debug("%s - find_predecessor for '%s'" %(self.uid, key.value))
-        if self.uid == self.fingers[0].node.uid:
+        if self.uid == self.fingers[0].respNode.uid:
             return self.asdict()
-        if key.isbetween(self.uid, self.fingers[0].node.uid):
+        if key.isbetween(self.uid, self.fingers[0].respNode.uid):
             return self.asdict()
         #TODO IDEA maybe: overwrite dispatch on xmlrpc server
         # then it is possible to dispatch on specific method for rpc
@@ -303,14 +299,14 @@ class LocalNode(BasicNode):
             if self.uid == keyvalue:
                 #TODO I DONT KNOW what to do!!!
                 continue
-            if self.fingers[i].node.uid == self.uid: # (1)
+            if self.fingers[i].respNode.uid == self.uid: # (1)
                 if self.successor.uid == self.uid:
                     return self.asdict() #self is alone on the ring
                 if Key(keyvalue).isbetween(self.uid, self.successor.uid):
                     return self.asdict()
                 continue
-            if self.fingers[i].node.uid.isbetween(self.uid, keyvalue): # change from papaer algo: fingers[i].key in place of self.uid
-                return self.fingers[i].node.asdict()
+            if self.fingers[i].respNode.uid.isbetween(self.uid, keyvalue): # change from papaer algo: fingers[i].key in place of self.uid
+                return self.fingers[i].respNode.asdict()
         return self.asdict() # Should not happen because of (1), not sure sought
 
     def updatefinger(self, firstnode):

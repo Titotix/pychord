@@ -17,9 +17,9 @@ class TestInitFingers(unittest.TestCase):
         self.assertEqual(self.nodes[1].predecessor.uid, self.nodes[0].uid)
         for i in range(0, self.nodes[0].uid.idlength):
             if self.nodes[1].fingers[i].key.isbetween(self.nodes[1].uid, self.nodes[0].uid):
-                self.assertEqual(self.nodes[1].fingers[i].node.uid, self.nodes[0].uid)
+                self.assertEqual(self.nodes[1].fingers[i].respNode.uid, self.nodes[0].uid)
             else:
-                self.assertEqual(self.nodes[1].fingers[i].node.uid, self.nodes[1].uid)
+                self.assertEqual(self.nodes[1].fingers[i].respNode.uid, self.nodes[1].uid)
 
 class TestJoinTwoNodeRing(unittest.TestCase):
     def setUp(self):
@@ -39,12 +39,12 @@ class TestJoinTwoNodeRing(unittest.TestCase):
             for i in range(0, node.uid.idlength):
                 if node.fingers[i].key.isbetween(node.uid, othernode.uid):
                     self.assertEqual(
-                            node.fingers[i].node.uid,
+                            node.fingers[i].respNode.uid,
                             othernode.uid
                     )
                 else:
                     self.assertEqual(
-                            node.fingers[i].node.uid,
+                            node.fingers[i].respNode.uid,
                             node.uid
                     )
 
@@ -81,16 +81,16 @@ class TestJoinThreeNodeRing(unittest.TestCase):
             for i in range(0, node.uid.idlength):
                 if node.fingers[i].key.isbetween(node.uid, nodesuccessor.uid):
                     self.assertEqual(
-                            node.fingers[i].node.uid,
+                            node.fingers[i].respNode.uid,
                             nodesuccessor.uid
                     )
                 elif node.fingers[i].key.isbetween(nodesuccessor.uid, nodepredecessor.uid):
                     self.assertEqual(
-                            node.fingers[i].node.uid,
+                            node.fingers[i].respNode.uid,
                             nodepredecessor.uid
                     )
                 else:
                     self.assertEqual(
-                            node.fingers[i].node.uid,
+                            node.fingers[i].respNode.uid,
                             node.uid
                     )

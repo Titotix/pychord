@@ -64,10 +64,10 @@ class TestClosestPrecedingFingerThreeNode(unittest.TestCase):
             # by iterate over all fingers
             # we look for the closest preceding finger for keytolookfor
             for i in range(0, node.uid.idlength):
-                if node.fingers[i].node.uid.isbetween(node.uid, keytolookfor):
-                    distance = key.Key(keytolookfor) - node.fingers[i].node.uid.value
+                if node.fingers[i].respNode.uid.isbetween(node.uid, keytolookfor):
+                    distance = key.Key(keytolookfor) - node.fingers[i].respNode.uid.value
                     if key.Key(distance) < distanceanswer:
-                        answer = node.fingers[i].node.uid.value
+                        answer = node.fingers[i].respNode.uid.value
                         distanceanswer = key.Key(distance)
             if not answer:
                 answer = node.uid.value
