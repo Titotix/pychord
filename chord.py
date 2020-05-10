@@ -67,11 +67,6 @@ class NodeInterface(BasicNode):
         else:
             raise ValueError("localNode and *args are exclusive arguments")
 
-class RemoteNode(BasicNode):
-    def __init__(self, *args):
-        super(RemoteNode, self).__init__(*args)
-        self.rpcProxy = clientxmlrpc.ChordClientxmlrpcProxy(self.ip, self.port)
-
 class Finger(object):
     def __init__(self, key, originNode, respNode):
         """
@@ -296,7 +291,7 @@ class LocalNode(BasicNode):
             if hasattr(cloPrecedFingerDict, "succ"):
                 #TODO in test, is this if usefull ?
                 breakpoint() #probably not...
-                cloPrecedFingerSucc = RemoteNode(cloPrecedFingerDict["succ"])
+                cloPrecedFingerSucc = self.getNodeInterface(cloPrecedFingerDict["succ"])
             else:
                 cloPrecedFinger = self.getNodeInterface(cloPrecedFingerDict)
                 if cloPrecedFinger.uid == self.uid:
