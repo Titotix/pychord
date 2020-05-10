@@ -10,8 +10,8 @@ class NodeLookupTest(unittest.TestCase):
         self.node1 = chord.LocalNode(self.ip, self.port[1])
         self.node2 = chord.LocalNode(self.ip, self.port[2])
 
-        self.node0.addToRing(chord.BasicNode(self.node1.ip, self.node1.port))
-        self.node0.addToRing(chord.BasicNode(self.node2.ip, self.node2.port))
+        self.node1.join(chord.NodeInterface({"ip":self.node0.ip, "port":self.node0.port}))
+        self.node2.join(chord.NodeInterface({"ip": self.node0.ip, "port": self.node0.port}))
 
     @classmethod
     def tearDownClass(self):
