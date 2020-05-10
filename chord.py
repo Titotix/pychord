@@ -50,22 +50,24 @@ class NodeInterface(BasicNode):
     This class has the purpose  to abstract the choice of doing straightforward
     call on method if the node is self or to do RPC if it's a remote one
 
-    if @param localNode is provided,
-    the NodeInterface object uses methods from localNode
-    if not, RPC are done on provided ip and port (throught *args, see BasicNode __init__())
+    If type of `arg` is LocalNode
+    the NodeInterface object uses methods from it directly
 
-    args and localNode are exclusive arguments
-    @param args: directly passed to BasicNode constructor
+    If type of `arg` is dict, we assume it is a remote node
+    RPC will be done on arg["ip"] and arg["port"]
+    (as a BasicNose is constructed from values of arg see BasicNode.__init__())
+
+    @param arg: directly passed to BasicNode constructor
     """
-    def __init__(self, *args, localNode=None):
-        if not localNode:
-            super(NodeInterface, self).__init__(*args)
+    def __init__(self, arg):
+        if isinstance(arg, LocalNode):
+            super(NodeInterface, self).__init__(arg.ip, arg.port)
+            self.methodProxy = arg
+        elif isinstance(arg, dict):
+            super(NodeInterface, self).__init__(arg)
             self.methodProxy = clientxmlrpc.ChordClientxmlrpcProxy(self.ip, self.port)
-        elif len(args) == 0:
-            super(NodeInterface, self).__init__(localNode.ip, localNode.port)
-            self.methodProxy = localNode
         else:
-            raise ValueError("localNode and *args are exclusive arguments")
+            raise TypeError("Supports LocalNode or dict")
 
 class Finger(object):
     def __init__(self, key, originNode, respNode):
@@ -103,7 +105,7 @@ class Finger(object):
 class LocalNode(BasicNode):
     def __init__(self, ip, port):
         BasicNode.__init__(self, ip, port)
-        self.predecessor = NodeInterface(localNode=self)
+        self.predecessor = NodeInterface(self)
         self.fingers = []
         self.createfingertable()
 
@@ -129,7 +131,7 @@ class LocalNode(BasicNode):
         Create fingers table
         Calculate all fingerkey and initializze all to self
         """
-        selfinterface = NodeInterface(localNode=self)
+        selfinterface = NodeInterface(self)
         for i in range(0, self.uid.idlength):
             self.fingers.append(Finger(self.calcfinger(i), self, selfinterface))
 
@@ -162,7 +164,7 @@ class LocalNode(BasicNode):
         Compare self and nodedict to provide localNode or not
         """
         if nodedict["ip"] == self.ip and nodedict["port"] == self.port:
-            return NodeInterface(localNode=self)
+            return NodeInterface(self)
         else:
             return NodeInterface(nodedict)
 
