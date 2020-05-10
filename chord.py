@@ -212,8 +212,6 @@ class LocalNode(BasicNode):
         if isinstance(key, dict):
             key = key["value"]
         prednode = self.find_predecessor(key)
-        #TODO: avoird rpc to it self in case predkey is actually self
-        #if self.ip != predkey["ip"] or self.ip == predkey["ip"] and self.port != predkey["port"]:
         return prednode["succ"]
 
     def find_predecessor(self, key):
@@ -231,7 +229,6 @@ class LocalNode(BasicNode):
         #TODO avoid casting directly in NodeInterface because we loose potential succ/prede info from the original dict
         cloPrecedFinger= self.getNodeInterface(self.closest_preceding_finger(key.value))
         cloPrecedFingerSucc = BasicNode(cloPrecedFinger.methodProxy.getsuccessor())
-        #TODO add uid info to return dict of rpc
         if cloPrecedFinger.uid == cloPrecedFingerSucc.uid:
             #TODO Here, self noticed that node has wrong fingers, should I correct it ?
             resdict = cloPrecedFinger.asdict()
