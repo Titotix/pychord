@@ -92,16 +92,9 @@ class Finger(object):
     def node(self):
         return self.respNode
 
-    def createNodeInterface(self, respNodedict):
-        if respNodedict["ip"] == self.originNode.ip\
-                and respNodedict["port"] == self.originNode.port:
-            return NodeInterface(localNode=self.node)
-        else:
-            return NodeInterface(respNodedict)
-
     def setRespNode(self, respNode):
         if isinstance(respNode, dict):
-            self.respNode = self.createNodeInterface(respNode)
+            self.respNode = self.originNode.getNodeInterface(respNode)
         elif isinstance(respNode, NodeInterface):
             self.respNode = respNode
         else:
