@@ -322,7 +322,7 @@ class LocalNode(BasicNode):
         for n, f in enumerate(self.fingers):
             print("TABLE: finger{0} : "
                 "- key: {2} - resp: {1}"
-                .format(n, f.node.uid, f.key))
+                .format(n, f.respNode.uid, f.key))
             #if f["resp"].uid.value != self.lookupfinger(n, useOnlySucc=True).uid.value:
                 #self.log.error("error between finger table and computed value")
                 #continue
