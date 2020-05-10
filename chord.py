@@ -164,46 +164,6 @@ class LocalNode(BasicNode):
         else:
             return NodeInterface(nodedict)
 
-    def addToRing(self, newnode):
-        '''
-        Outdated method
-        @param newnode : BasicNode to interact first with the ring
-        '''
-        if isinstance(newnode, dict):
-            newnode = BasicNode(newnode["ip"], newnode["port"])
-        if newnode.uid.value != self.uid.value:
-            # TODO optim : no need to update all node of the ring at each new node
-            self.updatesucc(newnode.asdict())
-            #self.updatefinger(newnode, self)
-        else:
-
-            raise Exception
-
-    def updatesucc(self, newnode):
-        """
-        Outdated method
-        Update successor with the node wich just join if relevant
-        If not, propagate updatesucc to its own successor
-        """
-        newnodeObj = BasicNode(newnode["ip"], newnode["port"])
-
-        #TODO: check if this can happen and in wich case
-        # as it should not happen if updatesucc work as expected
-        if newnode.uid.value == self.uid.value:
-            raise Exception
-
-        if self.successor is None:
-            self.setsuccessor(newnode)
-            self.successor.rpcProxy.setsuccessor({"ip":self.ip, "port":self.port})
-
-        elif newnodeObj.uid.isbetween(self.uid.value, self.successor.uid.value):
-            newnodeSuccip = self.successor.ip
-            newnodeSuccport = self.successor.port
-            self.setsuccessor(newnode)
-            self.successor.rpcProxy.setsuccessor({"ip": newnodeSuccip, "port": newnodeSuccport})
-        else:
-            self.successor.rpcProxy.updatesucc(newnode)
-
     def join(self, node):
         self.init_fingers(node)
         self.update_others()
