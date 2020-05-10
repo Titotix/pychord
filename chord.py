@@ -46,9 +46,9 @@ class BasicNode(object):
 class NodeInterface(BasicNode):
     """
     Interface to call method on specified node
-    When doing RPC on a node N, N could be self.
+    When needed to use method from node N, N could be self.
     This class has the purpose  to abstract the choice of doing straightforward
-    call on method if the node is self or to do RPC if it's a distant one
+    call on method if the node is self or to do RPC if it's a remote one
 
     if @param localNode is provided,
     the NodeInterface object uses methods from localNode
@@ -60,32 +60,17 @@ class NodeInterface(BasicNode):
     def __init__(self, *args, localNode=None):
         if not localNode:
             super(NodeInterface, self).__init__(*args)
-            RemoteCallInterface.__init__(self)
+            self.methodProxy = clientxmlrpc.ChordClientxmlrpcProxy(self.ip, self.port)
         elif len(args) == 0:
             super(NodeInterface, self).__init__(localNode.ip, localNode.port)
-            LocalCallInterface.__init__(self, localNode)
+            self.methodProxy = localNode
         else:
             raise ValueError("localNode and *args are exclusive arguments")
-
-class RemoteCallInterface(object):
-    """
-    Interface for RPC strategy for a NodeInterface
-    """
-    def __init__(self):
-        self.methodProxy = clientxmlrpc.ChordClientxmlrpcProxy(self.ip, self.port)
-
-class LocalCallInterface(object):
-    """
-    Interface for local procedures call strategy for a NodeInterface
-    """
-    def __init__(self, localNode):
-        self.methodProxy = localNode
 
 class RemoteNode(BasicNode):
     def __init__(self, *args):
         super(RemoteNode, self).__init__(*args)
         self.rpcProxy = clientxmlrpc.ChordClientxmlrpcProxy(self.ip, self.port)
-
 
 class Finger(object):
     def __init__(self, key, originNode, respNode):
@@ -162,7 +147,8 @@ class LocalNode(BasicNode):
 
     def setsuccessor(self, successor):
         """
-        Create a RemoteNode object and set to self.successor
+        Create a NodeInterface object and set to self.fingers[0].respnode
+        which is also self.successor
 
         @param successor: dict with ip and port as key
         """
@@ -170,7 +156,7 @@ class LocalNode(BasicNode):
     
     def setpredecessor(self, predecessor):
         """
-        Create a RemoteNode object and set to self.predecessor
+        Create a NodeInterface object and set to self.predecessor
 
         @param predecessor: dict with ip and port as key
         """
@@ -295,8 +281,8 @@ class LocalNode(BasicNode):
             return self.asdict()
         #TODO IDEA maybe: overwrite dispatch on xmlrpc server
         # then it is possible to dispatch on specific method for rpc
-        # so in the next line case we are not force to transform cloPrecedFinger into a RemoteNode
-        #TODO avoid casting directly in RemoteNode because we loose potential succ/prede info from the original dict
+        # so in the next line case we are not force to transform cloPrecedFinger into a NodeInterface
+        #TODO avoid casting directly in NodeInterface because we loose potential succ/prede info from the original dict
         cloPrecedFinger= self.getNodeInterface(self.closest_preceding_finger(key.value))
         cloPrecedFingerSucc = BasicNode(cloPrecedFinger.methodProxy.getsuccessor())
         #TODO add uid info to return dict of rpc
@@ -313,7 +299,6 @@ class LocalNode(BasicNode):
                 cloPrecedFingerSucc = RemoteNode(cloPrecedFingerDict["succ"])
             else:
                 cloPrecedFinger = self.getNodeInterface(cloPrecedFingerDict)
-                #TODO abstract routing if RemoteNode is actually self do not RPC call method before methodProxy ?
                 if cloPrecedFinger.uid == self.uid:
                     cloPrecedFingerSucc = BasicNode(self.getsuccessor())
                 else:
