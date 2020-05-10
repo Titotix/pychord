@@ -130,7 +130,7 @@ class Finger(object):
 class LocalNode(BasicNode):
     def __init__(self, ip, port):
         BasicNode.__init__(self, ip, port)
-        self.predecessor = BasicNode(self.ip, self.port)
+        self.predecessor = NodeInterface(localNode=self)
         self.fingers = []
         self.createfingertable()
 
@@ -174,7 +174,7 @@ class LocalNode(BasicNode):
 
         @param predecessor: dict with ip and port as key
         """
-        self.predecessor = RemoteNode(predecessor["ip"], predecessor["port"])
+        self.predecessor = self.getNodeInterface(predecessor)
 
     def getsuccessor(self):
         return self.fingers[0].node.asdict()
@@ -239,15 +239,15 @@ class LocalNode(BasicNode):
     def init_fingers(self, existingnode):
         log.debug("%s - init_fingers with %s" %(self.uid, existingnode.uid))
         fingerkey = self.fingers[0].key
-        self.setsuccessor(existingnode.rpcProxy.find_successor(fingerkey))
+        self.setsuccessor(existingnode.methodProxy.find_successor(fingerkey))
         self.setpredecessor(self.fingers[0].respNode.methodProxy.getpredecessor())
-        self.predecessor.rpcProxy.setsuccessor(self.asdict()) # added compare to paper
+        self.predecessor.methodProxy.setsuccessor(self.asdict()) # added compare to paper
         self.fingers[0].respNode.methodProxy.setpredecessor(self.asdict())
         for i in range(0, self.uid.idlength - 1):
             if self.fingers[i + 1].key.isbetween(self.fingers[i].key, self.fingers[i].node.uid): #changed from paper's algo which use self.uid in place of fingers[I].key
                 self.fingers[i + 1].setRespNode(self.fingers[i].respNode)
             else:
-                nextfingersucc = existingnode.rpcProxy.find_successor(
+                nextfingersucc = existingnode.methodProxy.find_successor(
                         self.fingers[i+1].key)
                 self.fingers[i+1].setRespNode(nextfingersucc)
 
@@ -269,7 +269,7 @@ class LocalNode(BasicNode):
             self.fingers[i].setRespNode(callingnode.asdict())
             #TODO optim : self knows fingers[i] uid so it can calculate if predecessor has chance or not to have to update his finger(i)
             if self.predecessor.uid != callingnode.uid: # dont rpc on callingnode it self
-                self.predecessor.rpcProxy.update_finger_table(callingnode.asdict(), i)
+                self.predecessor.methodProxy.update_finger_table(callingnode.asdict(), i)
 
     def find_successor(self, key):
         """
@@ -297,27 +297,27 @@ class LocalNode(BasicNode):
         # then it is possible to dispatch on specific method for rpc
         # so in the next line case we are not force to transform cloPrecedFinger into a RemoteNode
         #TODO avoid casting directly in RemoteNode because we loose potential succ/prede info from the original dict
-        cloPrecedFinger= RemoteNode(self.closest_preceding_finger(key.value))
-        cloPrecedFingerSucc = BasicNode(cloPrecedFinger.rpcProxy.getsuccessor())
+        cloPrecedFinger= self.getNodeInterface(self.closest_preceding_finger(key.value))
+        cloPrecedFingerSucc = BasicNode(cloPrecedFinger.methodProxy.getsuccessor())
         #TODO add uid info to return dict of rpc
         if cloPrecedFinger.uid == cloPrecedFingerSucc.uid:
             #TODO Here, self noticed that node has wrong fingers, should I correct it ?
             resdict = cloPrecedFinger.asdict()
-            resdict = resdict["succ"] = cloPrecedFingerSucc.asdict()
+            resdict["succ"] = cloPrecedFingerSucc.asdict()
             return resdict
         while not key.isbetween(cloPrecedFinger.uid, cloPrecedFingerSucc.uid):
-            cloPrecedFingerDict = cloPrecedFinger.rpcProxy.closest_preceding_finger(key.value)
+            cloPrecedFingerDict = cloPrecedFinger.methodProxy.closest_preceding_finger(key.value)
             if hasattr(cloPrecedFingerDict, "succ"):
                 #TODO in test, is this if usefull ?
                 breakpoint() #probably not...
                 cloPrecedFingerSucc = RemoteNode(cloPrecedFingerDict["succ"])
             else:
-                cloPrecedFinger = RemoteNode(cloPrecedFingerDict)
-                #TODO abstract routing if RemoteNode is actually self do not RPC call method before rpcProxy ?
+                cloPrecedFinger = self.getNodeInterface(cloPrecedFingerDict)
+                #TODO abstract routing if RemoteNode is actually self do not RPC call method before methodProxy ?
                 if cloPrecedFinger.uid == self.uid:
                     cloPrecedFingerSucc = BasicNode(self.getsuccessor())
                 else:
-                    cloPrecedFingerSucc = BasicNode(cloPrecedFinger.rpcProxy.getsuccessor())
+                    cloPrecedFingerSucc = BasicNode(cloPrecedFinger.methodProxy.getsuccessor())
         resdict = cloPrecedFinger.asdict()
         resdict["succ"] = cloPrecedFingerSucc.asdict()
         return resdict
@@ -352,7 +352,7 @@ class LocalNode(BasicNode):
             resp = self.lookupWithSucc(self.fingers[i].key)
             self.fingers[i].setRespNode(resp)
         if firstnode.uid != self.fingers[0].respNode.uid:
-            self.fingers[0].respNode.rpcProxy.updatefinger(firstnode)
+            self.fingers[0].respNode.methodProxy.updatefinger(firstnode)
 
     def lookupWithSucc(self, key):
         """
@@ -376,7 +376,7 @@ class LocalNode(BasicNode):
         if keyLookedUp.isbetween(self.uid.value, self.successor.uid.value):
             return {"ip": self.successor.ip, "port": self.successor.port}
 
-        return self.successor.rpcProxy.lookupWithSucc(key)
+        return self.successor.methodProxy.lookupWithSucc(key)
 
     def calcfinger(self, k):
         '''

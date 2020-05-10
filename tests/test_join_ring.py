@@ -10,7 +10,7 @@ class TestInitFingers(unittest.TestCase):
         tests.commons.stoplocalnodes(self.nodes)
 
     def test_init_fingers(self):
-        self.nodes[1].init_fingers(chord.RemoteNode(self.nodes[0].asdict()))
+        self.nodes[1].init_fingers(chord.NodeInterface(self.nodes[0].asdict()))
         self.assertEqual(self.nodes[1].successor.uid, self.nodes[0].uid)
         self.assertEqual(self.nodes[0].successor.uid, self.nodes[1].uid)
         self.assertEqual(self.nodes[0].predecessor.uid, self.nodes[1].uid)
@@ -29,7 +29,7 @@ class TestJoinTwoNodeRing(unittest.TestCase):
         tests.commons.stoplocalnodes(self.nodes)
 
     def test_join(self):
-        self.nodes[1].join(chord.RemoteNode(self.nodes[0].asdict()))
+        self.nodes[1].join(chord.NodeInterface(self.nodes[0].asdict()))
         self.assertEqual(self.nodes[1].successor.uid, self.nodes[0].uid)
         self.assertEqual(self.nodes[0].successor.uid, self.nodes[1].uid)
         self.assertEqual(self.nodes[0].predecessor.uid, self.nodes[1].uid)
@@ -56,8 +56,8 @@ class TestJoinThreeNodeRing(unittest.TestCase):
         tests.commons.stoplocalnodes(self.nodes)
 
     def test_join_three_node(self):
-        self.nodes[1].join(chord.RemoteNode(self.nodes[0].asdict()))
-        self.nodes[2].join(chord.RemoteNode(self.nodes[0].asdict()))
+        self.nodes[1].join(chord.NodeInterface(self.nodes[0].asdict()))
+        self.nodes[2].join(chord.NodeInterface(self.nodes[0].asdict()))
 
         for k, node in enumerate(self.nodes):
             node1 = self.nodes[(k+1) % len(self.nodes)]
