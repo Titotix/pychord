@@ -103,13 +103,33 @@ class TestFindSuccessorThreeNode(unittest.TestCase):
                     self.nodes[0].uid.value
             )
 
-        keytolookfor = self.nodes[0].uid + 1
-        if self.nodes[0].uid.isbetween(self.nodes[1].uid, self.nodes[2].uid):
-            answer = self.nodes[2].uid.value
-        else:
-            answer = self.nodes[1].uid.value
-        for node in [self.nodes[0], self.nodes[1], self.nodes[2]]:
+        keytolookfor = self.nodes[1].uid - 1
+        for node in self.nodes:
             self.assertEqual(
                     node.find_successor(keytolookfor)["uid"],
-                    answer
+                    self.nodes[1].uid.value
             )
+
+        keytolookfor = self.nodes[2].uid - 1
+        for node in self.nodes:
+            self.assertEqual(
+                    node.find_successor(keytolookfor)["uid"],
+                    self.nodes[2].uid.value
+            )
+
+        # FOr all nodes we search "manually" the successor of it's uid+1
+        # Then for all nodes,
+        # assert that find_successor's answer is what we manually look for
+        for i, node in enumerate(self.nodes):
+            node1 = self.nodes[(i+1) % len(self.nodes)]
+            node2 = self.nodes[(i+2) % len(self.nodes)]
+            keytolookfor = node.uid + 1
+            if node.uid.isbetween(node1.uid, node2.uid):
+                answer = node2.uid.value
+            else:
+                answer = node1.uid.value
+            for nodeToAsk in self.nodes:
+                self.assertEqual(
+                        nodeToAsk.find_successor(keytolookfor)["uid"],
+                        answer
+                )
