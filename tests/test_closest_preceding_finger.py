@@ -6,26 +6,46 @@ import key
 
 class TestCaseClosestPrecedingFinger(unittest.TestCase):
     def assertClosestPrecedingFinger(self, nodes, keytolookfor):
-        answer = None
-        distanceanswer = key.Key("f"*64)
         for node in nodes:
-            # by iterate over all fingers
-            # we look for the closest preceding finger for keytolookfor
-            for i in range(0, node.uid.idlength):
-                if node.fingers[i].respNode.uid.isbetween(node.uid, keytolookfor):
-                    distance = key.Key(keytolookfor) - node.fingers[i].respNode.uid.value
-                    if key.Key(distance) < distanceanswer:
-                        answer = node.fingers[i].respNode.uid.value
-                        distanceanswer = key.Key(distance)
-            if not answer:
-                answer = node.uid.value
-            # comapring answer to closest_preceding_finger() result
-            self.assertEqual(
-                    answer,
-                    node.closest_preceding_finger(keytolookfor)["uid"]
-            )
-            distanceanswer = key.Key("f"*64)
             answer = None
+            if node.uid == keytolookfor:
+                answer = node.predecessor.uid.value
+            if not answer:
+                # by iterate over all fingers
+                # we look for the closest preceding finger for keytolookfor
+                distanceanswer = key.Key("f"*64) #max distance
+                for i in range(0, node.uid.idlength):
+                    if node.fingers[i].respNode.uid.is_between_l_inclu(node.uid, keytolookfor):
+                        distance = key.Key(keytolookfor) - node.fingers[i].respNode.uid.value
+                        if key.Key(distance) < distanceanswer:
+                            answer = node.fingers[i].respNode.uid.value
+                            distanceanswer = key.Key(distance)
+                if not answer:
+                    answer = node.uid.value
+            # comparing answer to closest_preceding_finger() result
+            try:
+                res = node.closest_preceding_finger(keytolookfor)["uid"]
+                self.assertEqual(
+                        answer,
+                        res
+                )
+            except AssertionError as e:
+                breakpoint()
+                mess = e.args[0]
+                e.args = (mess + "\n"
+                        "Value asked to closest_preceding_finger:   '%s'\n"
+                        "closest_preceding_finger called from node: '%s'\n"
+                        "Expected answered value:                   '%s'\n"
+                        "closest_preceding_finger result value:     '%s'\n"
+                        "All nodes uid:\n"
+                        "* '{}'".format("'\n* '".join([x.uid.value for x in self.nodes]))
+
+                        %(keytolookfor, node.uid.value, answer, res),
+                )
+                raise
+            finally:
+                distanceanswer = key.Key("f"*64)
+                answer = None
 
 class TestClosestPrecedingFingerLonelyNode(TestCaseClosestPrecedingFinger):
     def setUp(self):
