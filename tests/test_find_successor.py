@@ -42,7 +42,10 @@ class TestFindSuccessorTwoNode(unittest.TestCase):
     def tearDown(self):
         tests.commons.stoplocalnodes(self.nodes)
 
-    def test_with_two_node(self):
+    def test_find_successor(self):
+        """
+        Test find_successor() on a 2 nodes ring
+        """
 
         keytolookfor = self.nodes[0].uid - 1
         self.assertEqual(
@@ -85,17 +88,54 @@ class TestFindSuccessorTwoNode(unittest.TestCase):
         )
 
 class TestFindSuccessorThreeNode(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.nodes = tests.commons.createlocalnodes(
                 3,
                 setfingers=True,
                 setpredecessor=True
         )
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
         tests.commons.stoplocalnodes(self.nodes)
 
-    def test_with_three_node(self):
+    def test_find_successor_key_equal_node(self):
+        """
+        Test find_successor(key) on a 3 nodes ring
+        Provided key is equal to nodes uid
+        """
+        # Test successor of a node.uid
+        # answer should be the node it self
+        for node_in_test in self.nodes:
+            keytolookfor = node_in_test.uid.value
+            for node in self.nodes:
+                try:
+                    res = node.find_successor(keytolookfor)["uid"]
+                    self.assertEqual(
+                            res,
+                            node_in_test.uid.value
+                    )
+                except AssertionError as e:
+                    mess = e.args[0]
+                    e.args = (mess + "\n"
+                            "Value asked to find_successor:   '%s'\n"
+                            "find_successor called from node: '%s'\n"
+                            "Expected answered value:         '%s'\n"
+                            "find_successor result value:     '%s'\n"
+                            "All nodes uid:\n"
+                            "* '{}'".format("'\n* '".join([x.uid.value for x in self.nodes]))
+
+                            %(keytolookfor, node.uid.value, node_in_test.uid.value, res),
+                    )
+                    raise
+
+    def test_find_successor_uid_minus_one(self):
+        """Test successor of node.uid - 1
+         result should be this node
+        """
+        #TODO implement same loop than test_find_successor_node_plus_one()
+        # with exception handling (more output if error)
         keytolookfor = self.nodes[0].uid - 1
         for node in self.nodes:
             self.assertEqual(
@@ -117,6 +157,10 @@ class TestFindSuccessorThreeNode(unittest.TestCase):
                     self.nodes[2].uid.value
             )
 
+    def test_find_successor_node_plus_one(self):
+        """
+        Test find_successor on node.uid + 1 for a 3 nodes ring
+        """
         # FOr all nodes we search "manually" the successor of it's uid+1
         # Then for all nodes,
         # assert that find_successor's answer is what we manually look for
@@ -129,7 +173,24 @@ class TestFindSuccessorThreeNode(unittest.TestCase):
             else:
                 answer = node1.uid.value
             for nodeToAsk in self.nodes:
-                self.assertEqual(
-                        nodeToAsk.find_successor(keytolookfor)["uid"],
-                        answer
-                )
+                try:
+                    res = nodeToAsk.find_successor(keytolookfor)["uid"]
+                    self.assertEqual(
+                            res,
+                            answer
+                    )
+                except AssertionError as e:
+                    mess = e.args[0]
+                    e.args = (mess + "\n"
+                            "Value asked to find_predecessor:   '%s'\n"
+                            "find_predecessor called from node: '%s'\n"
+                            "Expected answered value:           '%s'\n"
+                            "find_predecessor result value:     '%s'\n"
+                            "All nodes uid:\n"
+                            "* '%s'\n"
+                            "* '%s'\n"
+                            "* '%s'"
+                            %(keytolookfor, nodeToAsk.uid.value, answer, res,
+                            node1.uid.value, node2.uid.value, node.uid.value),
+                    )
+                    raise
