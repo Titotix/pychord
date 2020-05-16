@@ -3,6 +3,7 @@ import chord
 import random
 import tests.commons
 
+
 class TestFindSuccessorLonelyNode(unittest.TestCase):
     def setUp(self):
         self.ip = "127.0.0.1"
@@ -27,6 +28,7 @@ class TestFindSuccessorLonelyNode(unittest.TestCase):
                 self.existingnode.uid
         )
 
+
 class TestFindSuccessorTwoNode(unittest.TestCase):
     """
     Test find_successor methods on a two node ring
@@ -47,6 +49,18 @@ class TestFindSuccessorTwoNode(unittest.TestCase):
         Test find_successor() on a 2 nodes ring
         """
 
+        keytolookfor = self.nodes[0].uid
+        for node in self.nodes:
+            self.assertEqual(
+                    node.find_successor(keytolookfor)["uid"],
+                    self.nodes[0].uid.value
+            )
+        keytolookfor = self.nodes[1].uid
+        for node in self.nodes:
+            self.assertEqual(
+                    node.find_successor(keytolookfor)["uid"],
+                    self.nodes[1].uid.value
+            )
         keytolookfor = self.nodes[0].uid - 1
         self.assertEqual(
                 self.nodes[0].find_successor(keytolookfor)["uid"],
