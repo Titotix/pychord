@@ -130,7 +130,70 @@ class Key(object):
     def __len__(self):
         return len(self.value)
     
-    # TODO optim : each isbetween call will be a RPC, sad if we locally know the value of remote node ?
+    def is_between_r_inclu(self, limit1, limit2):
+        """True if self.value is contained by ]limit1, limit2]
+        Return False otherwise
+        Raise EqualLimitError if limit1 == limit2
+        """
+        if self.value == limit2:
+            return True
+        elif self.value == limit1:
+            return False
+        return self._is_inside(limit1, limit2)
+
+    def is_between_l_inclu(self, limit1, limit2):
+        """True if self.value is contained by [limit1, limit2[
+        Return False otherwise
+        Raise EqualLimitError if limit1 == limit2
+        """
+        if self.value == limit1:
+            return True
+        elif self.value == limit2:
+            return False
+        return self._is_inside(limit1, limit2)
+
+    def is_between_inclu(self, limit1, limit2):
+        """True if self.value is contained by [limit1, limit2]
+        Return False otherwise
+        Raise EqualLimitError if limit1 == limit2
+        """
+        if self.value == limit2 or self.value == limit1:
+            return True
+        return self._is_inside(limit1, limit2)
+
+    def is_between_exclu(self, limit1, limit2):
+        """True if self.value is contained by ]limit1, limit2[
+        Return False otherwise
+        Raise EqualLimitError if limit1 == limit2
+        """
+        if self.value == limit2 or self.value == limit1:
+            return False
+        return self._is_inside(limit1, limit2)
+
+    def _is_inside(self, limit1, limit2):
+        '''
+        Returns True if self.value is contained by ]limit1,  limit2[
+        Raise Exceptions otherwise
+        If self.value == limit1 or self.value == limit2, raise ValueError
+        Raise ValueError if limit1 == limit2
+        '''
+        if len(self) != len(limit1) != len(limit2):
+            raise ValueError("Unable to compare different length value and limit")
+        if self.value == limit1 or self.value == limit2:
+            raise ValueError("limit equal to self.value")
+
+        if limit1 > limit2:
+            if self.value > limit1 or self.value < limit2:
+                return True
+            return False
+        elif limit1 < limit2:
+            if self.value > limit1 and self.value < limit2:
+                return True
+            return False
+        else:
+            # limit1 == limit2
+            raise EqualLimitsError("limits equal to self.value")
+
     def isbetween(self, limit1, limit2):
         '''
         Returns True if self.value is contained by [limit1,  limit2]
@@ -162,3 +225,10 @@ class Uid(Key):
     def __init__(self, strtohash):
         hash = hashlib.sha256(strtohash.encode("utf-8"))
         Key.__init__(self, hash.hexdigest())
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+class EqualLimitsError(Error):
+    pass
