@@ -209,8 +209,6 @@ class LocalNode(BasicNode):
         Use predecessor, successor and fingers information
         Should produce the same answer than lookupWithSucc
         """
-        if isinstance(key, dict):
-            key = key["value"]
         prednode = self.find_predecessor(key)
         return prednode["succ"]
 
@@ -224,7 +222,12 @@ class LocalNode(BasicNode):
         """
         if isinstance(key, dict):
             key = key["value"]
-        key = Key(key)
+            key = Key(key)
+        elif isinstance(key, str):
+            key = Key(key)
+        if not isinstance(key, Key):
+            raise TypeError("find_predecessor arg must be dict, str or Key")
+
         log.debug("%s - find_predecessor for '%s'" %(self.uid, key.value))
         if self.uid == self.fingers[0].respNode.uid:
             return self.asdict()
