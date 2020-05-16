@@ -14,7 +14,7 @@ class NodeUidTest(unittest.TestCase):
         self.node = chord.LocalNode(self.ip, self.port)
 
     @classmethod
-    def tearDOwnClass(self):
+    def tearDownClass(self):
         self.node.stopXmlRPCServer()
 
     def test_uid_value(self):
@@ -95,7 +95,7 @@ class UidValueOperationTest(unittest.TestCase):
         self.node = chord.LocalNode(self.ip, self.port)
 
     @classmethod
-    def tearDOwnClass(self):
+    def tearDownClass(self):
         self.node.stopXmlRPCServer()
 
     def test_add_int(self):
@@ -175,7 +175,7 @@ class UidValueOperationTest(unittest.TestCase):
 
 class UidIsBetweenTest(unittest.TestCase):
     """
-    Test isBetwwen method from Key class
+    Test isBetween method from Key class
     """
 
     @classmethod
@@ -185,7 +185,7 @@ class UidIsBetweenTest(unittest.TestCase):
         self.node0 = chord.LocalNode(self.ip, self.port)
 
     @classmethod
-    def tearDOwnClass(self):
+    def tearDownClass(self):
         self.node0.stopXmlRPCServer()
 
     def test_isbetween(self):
