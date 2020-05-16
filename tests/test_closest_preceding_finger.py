@@ -4,29 +4,30 @@ import random
 import tests.commons
 import key
 
-def assertClosestPrecedingFinger(testCase, nodes, keytolookfor):
-    answer = None
-    distanceanswer = key.Key("f"*64)
-    for node in nodes:
-        # by iterate over all fingers
-        # we look for the closest preceding finger for keytolookfor
-        for i in range(0, node.uid.idlength):
-            if node.fingers[i].respNode.uid.isbetween(node.uid, keytolookfor):
-                distance = key.Key(keytolookfor) - node.fingers[i].respNode.uid.value
-                if key.Key(distance) < distanceanswer:
-                    answer = node.fingers[i].respNode.uid.value
-                    distanceanswer = key.Key(distance)
-        if not answer:
-            answer = node.uid.value
-        # comapring answer to closest_preceding_finger() result
-        testCase.assertEqual(
-                answer,
-                node.closest_preceding_finger(keytolookfor)["uid"]
-        )
-        distanceanswer = key.Key("f"*64)
+class TestCaseClosestPrecedingFinger(unittest.TestCase):
+    def assertClosestPrecedingFinger(self, nodes, keytolookfor):
         answer = None
+        distanceanswer = key.Key("f"*64)
+        for node in nodes:
+            # by iterate over all fingers
+            # we look for the closest preceding finger for keytolookfor
+            for i in range(0, node.uid.idlength):
+                if node.fingers[i].respNode.uid.isbetween(node.uid, keytolookfor):
+                    distance = key.Key(keytolookfor) - node.fingers[i].respNode.uid.value
+                    if key.Key(distance) < distanceanswer:
+                        answer = node.fingers[i].respNode.uid.value
+                        distanceanswer = key.Key(distance)
+            if not answer:
+                answer = node.uid.value
+            # comapring answer to closest_preceding_finger() result
+            self.assertEqual(
+                    answer,
+                    node.closest_preceding_finger(keytolookfor)["uid"]
+            )
+            distanceanswer = key.Key("f"*64)
+            answer = None
 
-class TestClosestPrecedingFingerLonelyNode(unittest.TestCase):
+class TestClosestPrecedingFingerLonelyNode(TestCaseClosestPrecedingFinger):
     def setUp(self):
         self.node = tests.commons.createlocalnodes(1)[0]
 
@@ -48,7 +49,7 @@ class TestClosestPrecedingFingerLonelyNode(unittest.TestCase):
                 self.node.uid
         )
 
-class TestClosestPrecedingFingerTwoNode(unittest.TestCase):
+class TestClosestPrecedingFingerTwoNode(TestCaseClosestPrecedingFinger):
     def setUp(self):
         self.nodes = tests.commons.createlocalnodes(
                 2,
@@ -67,9 +68,9 @@ class TestClosestPrecedingFingerTwoNode(unittest.TestCase):
         )
 
         keytolookfor = "0" * 64
-        assertClosestPrecedingFinger(self, self.nodes, keytolookfor)
+        self.assertClosestPrecedingFinger(self.nodes, keytolookfor)
 
-class TestClosestPrecedingFingerThreeNode(unittest.TestCase):
+class TestClosestPrecedingFingerThreeNode(TestCaseClosestPrecedingFinger):
     def setUp(self):
         self.nodes = tests.commons.createlocalnodes(
                 3,
@@ -82,13 +83,13 @@ class TestClosestPrecedingFingerThreeNode(unittest.TestCase):
 
     def test_closest_preceding_finger_three_node(self):
         keytolookfor = self.nodes[0].uid - 1
-        assertClosestPrecedingFinger(self, self.nodes, keytolookfor)
+        self.assertClosestPrecedingFinger(self.nodes, keytolookfor)
 
         keytolookfor = self.nodes[0].uid + 1
-        assertClosestPrecedingFinger(self, self.nodes, keytolookfor)
+        self.assertClosestPrecedingFinger(self.nodes, keytolookfor)
 
         keytolookfor = self.nodes[1].uid + 1
-        assertClosestPrecedingFinger(self, self.nodes, keytolookfor)
+        self.assertClosestPrecedingFinger(self.nodes, keytolookfor)
 
         keytolookfor = "0" * 64
-        assertClosestPrecedingFinger(self, self.nodes, keytolookfor)
+        self.assertClosestPrecedingFinger(self.nodes, keytolookfor)
