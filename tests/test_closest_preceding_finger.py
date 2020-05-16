@@ -91,14 +91,16 @@ class TestClosestPrecedingFingerTwoNode(TestCaseClosestPrecedingFinger):
         self.assertClosestPrecedingFinger(self.nodes, keytolookfor)
 
 class TestClosestPrecedingFingerThreeNode(TestCaseClosestPrecedingFinger):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.nodes = tests.commons.createlocalnodes(
                 3,
                 setfingers=True,
                 setpredecessor=True
         )
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
         tests.commons.stoplocalnodes(self.nodes)
 
     def test_closest_preceding_finger_three_node(self):
@@ -113,3 +115,12 @@ class TestClosestPrecedingFingerThreeNode(TestCaseClosestPrecedingFinger):
 
         keytolookfor = "0" * 64
         self.assertClosestPrecedingFinger(self.nodes, keytolookfor)
+
+    def test_closest_preceding_finger_node_equal_key(self):
+        """Test closest_preceding_finger() from all 3 nodes of the ring
+        The key provided to closest_preceding_finger() are equals to
+        nodes uid
+        """
+        for node in self.nodes:
+            keytolookfor = node.uid.value
+            self.assertClosestPrecedingFinger(self.nodes, keytolookfor)
