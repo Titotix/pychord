@@ -244,7 +244,7 @@ class LocalNode(BasicNode):
             resdict = cloPrecedFinger.asdict()
             resdict["succ"] = cloPrecedFingerSucc.asdict()
             return resdict
-        while not key.isbetween(cloPrecedFinger.uid, cloPrecedFingerSucc.uid):
+        while not key.is_between_r_inclu(cloPrecedFinger.uid, cloPrecedFingerSucc.uid):
             cloPrecedFingerDict = cloPrecedFinger.methodProxy.closest_preceding_finger(key.value)
             if hasattr(cloPrecedFingerDict, "succ"):
                 #TODO in test, is this if usefull ?
