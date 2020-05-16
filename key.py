@@ -9,7 +9,10 @@ class Key(object):
         self.idlength = 256
         if len(value) != self.idlength // 4:
             raise ValueError
-        self.value = value
+        if isinstance(value, str):
+            self.value = value
+        else:
+            raise TypeError("Can create key only from str")
 
     def setValue(self, newValue):
         if isinstance(newValue, str) and len(newValue) == self.idlength//4:
