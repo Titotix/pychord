@@ -1,5 +1,6 @@
 import hashlib
 
+#TODO: operands on Key should they return a key or a str ??
 class Key(object):
 
     def __init__(self, value):
@@ -80,6 +81,7 @@ class Key(object):
             raise TypeError("__ne__ only supports str or Key as input")
 
     def canonicalize(self, value):
+        #TODO: set as classmethod or function
         '''
         Returns the str repr of hexa value with the right number of hexa char
         Basically padd the input with'0' and get rid of '0x' and 'L'
