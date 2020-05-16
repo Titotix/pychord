@@ -1,11 +1,13 @@
 import hashlib
 
-#TODO: operands on Key should they return a key or a str ??
+# TODO: operands on Key should they return a key or a str ??
+
+
 class Key(object):
 
     def __init__(self, value):
-        #256 because we use sha256
-        #which return string of 64 hexa char (or 256 bits)
+        # 256 because we use sha256
+        # which return string of 64 hexa char (or 256 bits)
         self.idlength = 256
         if len(value) != self.idlength // 4:
             raise ValueError
@@ -15,7 +17,7 @@ class Key(object):
             raise TypeError("Can create key only from str")
 
     def setValue(self, newValue):
-        if isinstance(newValue, str) and len(newValue) == self.idlength//4:
+        if isinstance(newValue, str) and len(newValue) == self.idlength // 4:
             self.value = newValue
         else:
             raise ValueError
@@ -26,7 +28,7 @@ class Key(object):
     def __gt__(self, value):
         if isinstance(value, str):
             return int(self.value, 16) > int(value, 16)
-        elif isinstance(value,  Key):
+        elif isinstance(value, Key):
             return int(self.value, 16) > int(value.value, 16)
         elif isinstance(value, int):
             return int(self.value, 16) > value
@@ -36,7 +38,7 @@ class Key(object):
     def __ge__(self, value):
         if isinstance(value, str):
             return int(self.value, 16) >= int(value, 16)
-        elif isinstance(value,  Key):
+        elif isinstance(value, Key):
             return int(self.value, 16) >= int(value.value, 16)
         elif isinstance(value, int):
             return int(self.value, 16) >= value
@@ -45,8 +47,8 @@ class Key(object):
 
     def __lt__(self, value):
         if isinstance(value, str):
-            return int(self.value, 16) < int(value, 16) 
-        elif isinstance(value,  Key):
+            return int(self.value, 16) < int(value, 16)
+        elif isinstance(value, Key):
             return int(self.value, 16) < int(value.value, 16)
         elif isinstance(value, int):
             return int(self.value, 16) < value
@@ -56,7 +58,7 @@ class Key(object):
     def __le__(self, value):
         if isinstance(value, str):
             return int(self.value, 16) <= int(value, 16)
-        elif isinstance(value,  Key):
+        elif isinstance(value, Key):
             return int(self.value, 16) <= int(value.value, 16)
         elif isinstance(value, int):
             return int(self.value, 16) <= value
@@ -66,7 +68,7 @@ class Key(object):
     def __eq__(self, value):
         if isinstance(value, str):
             return int(self.value, 16) == int(value, 16)
-        elif isinstance(value,  Key):
+        elif isinstance(value, Key):
             return int(self.value, 16) == int(value.value, 16)
         elif isinstance(value, int):
             return int(self.value, 16) == value
@@ -76,7 +78,7 @@ class Key(object):
     def __ne__(self, value):
         if isinstance(value, str):
             return int(self.value, 16) != int(value, 16)
-        elif isinstance(value,  Key):
+        elif isinstance(value, Key):
             return int(self.value, 16) != int(value.value, 16)
         elif isinstance(value, int):
             return int(self.value, 16) != value
@@ -84,13 +86,13 @@ class Key(object):
             raise TypeError("__ne__ only supports str or Key as input")
 
     def canonicalize(self, value):
-        #TODO: set as classmethod or function
+        # TODO: set as classmethod or function
         '''
         Returns the str repr of hexa value with the right number of hexa char
         Basically padd the input with'0' and get rid of '0x' and 'L'
         '''
-        return format(value, '0>{}x'.format(self.idlength//4))
-        
+        return format(value, '0>{}x'.format(self.idlength // 4))
+
     def __add__(self, value):
         if isinstance(value, int):
             return self.sumint(value)
@@ -102,7 +104,7 @@ class Key(object):
             #self.log.error("Sum with unknow type")
             print(type(value))
             raise TypeError
-    
+
     def sumint(self, value):
         '''
         Return sum uid + value in hexa representation
@@ -121,7 +123,7 @@ class Key(object):
         else:
             #self.log.error("Sub with unknow type")
             raise TypeError
-    
+
     def subint(self, value):
         '''
         Return sub uid - value in hexa representation
@@ -132,7 +134,7 @@ class Key(object):
 
     def __len__(self):
         return len(self.value)
-    
+
     def is_between_r_inclu(self, limit1, limit2):
         """True if self.value is contained by ]limit1, limit2]
         Return False otherwise
@@ -181,7 +183,8 @@ class Key(object):
         Raise ValueError if limit1 == limit2
         '''
         if len(self) != len(limit1) != len(limit2):
-            raise ValueError("Unable to compare different length value and limit")
+            raise ValueError(
+                "Unable to compare different length value and limit")
         if self.value == limit1 or self.value == limit2:
             raise ValueError("limit equal to self.value")
 
@@ -205,7 +208,8 @@ class Key(object):
         '''
         if len(self.value) != len(limit1) != len(limit2):
             #self.log.error("Unable to compare.")
-            raise ValueError("Unable to compare different length value and limit")
+            raise ValueError(
+                "Unable to compare different length value and limit")
         if self.value == limit1 or self.value == limit2:
             return True
 
@@ -223,15 +227,18 @@ class Key(object):
             # limit1 == limit2
             raise ValueError("isbetween: limit1 == limit2")
 
+
 class Uid(Key):
-    
+
     def __init__(self, strtohash):
         hash = hashlib.sha256(strtohash.encode("utf-8"))
         Key.__init__(self, hash.hexdigest())
 
+
 class Error(Exception):
     """Base class for exceptions in this module."""
     pass
+
 
 class EqualLimitsError(Error):
     pass
