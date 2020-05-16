@@ -215,13 +215,20 @@ class LocalNode(BasicNode):
         return prednode["succ"]
 
     def find_predecessor(self, key):
+        """
+        Return the node which precede the provided key
+        If key is equal to a node uid N, the return value is N.predecessor
+
+        Return a dict which contains info of a node
+
+        """
         if isinstance(key, dict):
             key = key["value"]
         key = Key(key)
         log.debug("%s - find_predecessor for '%s'" %(self.uid, key.value))
         if self.uid == self.fingers[0].respNode.uid:
             return self.asdict()
-        if key.isbetween(self.uid, self.fingers[0].respNode.uid):
+        if key.is_between_r_inclu(self.uid, self.successor.uid):
             return self.asdict()
         #TODO IDEA maybe: overwrite dispatch on xmlrpc server
         # then it is possible to dispatch on specific method for rpc
