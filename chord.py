@@ -251,20 +251,24 @@ class LocalNode(BasicNode):
         return resdict
 
     def closest_preceding_finger(self, keyvalue):
+        """
+        Return the closest preceding known node of provided keyvalue
+
+        if keyvalue == self.uid -> self.predecessor
+        Iterates reversly on fingers to find the closest known one.
+        """
+        if self.uid == keyvalue:
+            return self.predecessor.asdict()
         for i in range(self.uid.idlength - 1, -1, -1):
-            #TODO aggregate all usecase of isbetween and handle genericly the limit1 == limit2 exception ?
-            if self.uid == keyvalue:
-                #TODO I DONT KNOW what to do!!!
-                continue
-            if self.fingers[i].respNode.uid == self.uid: # (1)
+            if self.fingers[i].respNode.uid == self.uid:
                 if self.successor.uid == self.uid:
                     return self.asdict() #self is alone on the ring
-                if Key(keyvalue).isbetween(self.uid, self.successor.uid):
+                if Key(keyvalue).is_between_r_inclu(self.uid, self.successor.uid):
                     return self.asdict()
                 continue
-            if self.fingers[i].respNode.uid.isbetween(self.uid, keyvalue):
+            if self.fingers[i].respNode.uid.is_between_exclu(self.uid, keyvalue):
                 return self.fingers[i].respNode.asdict()
-        return self.asdict() # Should not happen because of (1), not sure sought
+        return self.asdict()
 
     def updatefinger(self, firstnode):
         '''
