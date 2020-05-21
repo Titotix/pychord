@@ -219,9 +219,9 @@ class LocalNode(BasicNode):
 
     def init_fingers(self, existingnode):
         log.debug("%s - init_fingers with %s" %(self.uid, existingnode.uid))
-        fingerkey = self.fingers[0].key
-        self.setsuccessor(existingnode.methodProxy.find_successor(fingerkey))
-        self.setpredecessor(self.fingers[0].respNode.methodProxy.getpredecessor())
+        find_pred_res = existingnode.methodProxy.find_predecessor(self.uid.value)
+        self.setsuccessor(find_pred_res["succ"])
+        self.setpredecessor(find_pred_res)
         self.predecessor.methodProxy.setsuccessor(self.asdict()) # added compare to paper
         self.fingers[0].respNode.methodProxy.setpredecessor(self.asdict())
         for i in range(0, self.uid.idlength - 1):
