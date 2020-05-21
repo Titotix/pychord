@@ -8,12 +8,16 @@ class TestFindSuccessorLonelyNode(unittest.TestCase):
     def setUp(self):
         self.ip = "127.0.0.1"
         self.port = 2221
-        self.existingnode = chord.LocalNode(self.ip, self.port)
+        self.existingnode = chord.LocalNode(self.ip, self.port, _stabilizer=False)
 
     def tearDown(self):
-        self.existingnode.stopXmlRPCServer()
+        tests.commons.stoplocalnodes([self.existingnode])
 
-    def test_with_lonely_node(self):
+    def test_find_successor(self):
+        """
+        Test find_successor from a node not connected to a ring
+        All result from find_successor are exepcted to be the node itself
+        """
         self.assertEqual(
                 self.existingnode.find_successor("a"*64)["uid"],
                 self.existingnode.uid
@@ -38,7 +42,8 @@ class TestFindSuccessorTwoNode(unittest.TestCase):
         self.nodes = tests.commons.createlocalnodes(
                 2,
                 setfingers=True,
-                setpredecessor=True
+                setpredecessor=True,
+                stabilizer=False
         )
 
     def tearDown(self):
@@ -102,12 +107,18 @@ class TestFindSuccessorTwoNode(unittest.TestCase):
         )
 
 class TestFindSuccessorThreeNode(unittest.TestCase):
+    """
+    Test find_successor methods.
+    Generates and sets statically all nodes and their fingers/predecessor.
+    Doesn't use stabilizer
+    """
     @classmethod
     def setUpClass(self):
         self.nodes = tests.commons.createlocalnodes(
                 3,
                 setfingers=True,
-                setpredecessor=True
+                setpredecessor=True,
+                stabilizer=False
         )
 
     @classmethod
@@ -171,7 +182,7 @@ class TestFindSuccessorThreeNode(unittest.TestCase):
                     self.nodes[2].uid.value
             )
 
-    def test_find_successor_node_plus_one(self):
+    def test_find_successor_uid_plus_one(self):
         """
         Test find_successor on node.uid + 1 for a 3 nodes ring
         """

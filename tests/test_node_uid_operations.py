@@ -11,7 +11,7 @@ class NodeUidTest(unittest.TestCase):
     def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = 6000
-        self.node = chord.LocalNode(self.ip, self.port)
+        self.node = chord.LocalNode(self.ip, self.port, _stabilizer=False)
 
     @classmethod
     def tearDownClass(self):
@@ -92,7 +92,7 @@ class UidValueOperationTest(unittest.TestCase):
     def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = 5000
-        self.node = chord.LocalNode(self.ip, self.port)
+        self.node = chord.LocalNode(self.ip, self.port, _stabilizer=False)
 
     @classmethod
     def tearDownClass(self):
@@ -182,7 +182,7 @@ class UidIsBetweenTest(unittest.TestCase):
     def setUpClass(self):
         self.ip = "127.0.0.1"
         self.port = 3000
-        self.node0 = chord.LocalNode(self.ip, self.port)
+        self.node0 = chord.LocalNode(self.ip, self.port, _stabilizer=False)
 
     @classmethod
     def tearDownClass(self):

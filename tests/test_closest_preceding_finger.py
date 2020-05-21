@@ -49,7 +49,7 @@ class TestCaseClosestPrecedingFinger(unittest.TestCase):
 
 class TestClosestPrecedingFingerLonelyNode(TestCaseClosestPrecedingFinger):
     def setUp(self):
-        self.node = tests.commons.createlocalnodes(1)[0]
+        self.node = tests.commons.createlocalnodes(1, stabilizer=False)[0]
 
     def tearDown(self):
         tests.commons.stoplocalnodes([self.node])
@@ -74,7 +74,8 @@ class TestClosestPrecedingFingerTwoNode(TestCaseClosestPrecedingFinger):
         self.nodes = tests.commons.createlocalnodes(
                 2,
                 setfingers=True,
-                setpredecessor=True
+                setpredecessor=True,
+                stabilizer=False
         )
 
     def tearDown(self):
@@ -96,7 +97,8 @@ class TestClosestPrecedingFingerThreeNode(TestCaseClosestPrecedingFinger):
         self.nodes = tests.commons.createlocalnodes(
                 3,
                 setfingers=True,
-                setpredecessor=True
+                setpredecessor=True,
+                stabilizer=False
         )
 
     @classmethod

@@ -4,7 +4,7 @@ import tests.commons
 
 class TestInitFingers(unittest.TestCase):
     def setUp(self):
-        self.nodes = tests.commons.createlocalnodes(2)
+        self.nodes = tests.commons.createlocalnodes(2, stabilizer=False)
 
     def tearDown(self):
         tests.commons.stoplocalnodes(self.nodes)

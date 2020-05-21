@@ -1,11 +1,17 @@
 import chord
 import random
+import time
 
-def createlocalnodes(nb, *args, printports=True, setfingers=False, setpredecessor=False):
+def get_sha256(strtohash):
+    """Return sha256 as a str
+    """
+    return hashlib.sha256(strtohash).encode("utf-8").hexdigest()
+
+def createlocalnodes(nb, *args, printports=True, setfingers=False, setpredecessor=False, stabilizer=True):
     """
     Return a list of LocalNode instantiated
     Their ip are 127.0.0.1 and their ports are either provided as args,
-    if not their are randomly generated
+    or randomly generated
 
     @param nb: number of node to generate
     @param port1,port2,... ports of generated nodes
@@ -39,7 +45,7 @@ def createlocalnodes(nb, *args, printports=True, setfingers=False, setpredecesso
 
     nodelist = []
     for i in range(0, nb):
-        nodelist.append(chord.LocalNode("127.0.0.1", ports[i]))
+        nodelist.append(chord.LocalNode("127.0.0.1", ports[i], _stabilizer=stabilizer))
 
     if printports:
         output = ", ".join([str(x.port) for x in nodelist])
@@ -115,5 +121,11 @@ def _setpredecessorThreeNode(nodelist):
             node.setpredecessor(node2.asdict())
 
 def stoplocalnodes(nodes):
+    # First stop stabilizer
+    # it avoid ConnectionRefused if we stop simultanously xmlrpc and stabilizer
+    for node in nodes:
+        if node._stabilizer:
+            node.stabilizer.stop()
+    time.sleep(1)
     for node in nodes:
         node.stopXmlRPCServer()

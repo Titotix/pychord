@@ -12,7 +12,8 @@ class TestFindpredecessorTwoNode(unittest.TestCase):
         self.nodes = tests.commons.createlocalnodes(
                 2,
                 setfingers=True,
-                setpredecessor=True
+                setpredecessor=True,
+                stabilizer=False
         )
 
     def tearDown(self):
@@ -59,12 +60,18 @@ class TestFindpredecessorTwoNode(unittest.TestCase):
             )
 
 class TestFindpredecessorThreeNode(unittest.TestCase):
+    """
+    Test find_predecessor methods.
+    Generates and sets statically all nodes and their fingers/predecessor.
+    Doesn't use stabilizer
+    """
     @classmethod
     def setUpClass(self):
         self.nodes = tests.commons.createlocalnodes(
                 3,
                 setfingers=True,
-                setpredecessor=True
+                setpredecessor=True,
+                stabilizer=False
         )
 
     @classmethod
