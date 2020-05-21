@@ -2,6 +2,7 @@ import logging
 import sys
 import serverxmlrpc
 import clientxmlrpc
+import random
 
 from key import Key, Uid
 
@@ -216,6 +217,10 @@ class LocalNode(BasicNode):
         if not self.predecessor\
                 or Key(new_predecessor["uid"]).is_between_exclu(self.predecessor.uid, self.uid):
             self.setpredecessor(new_predecessor)
+
+    def fix_fingers(self):
+        i = random.randint(1, self.uid.idlength - 1)
+        self.fingers[i].setRespNode(self.find_successor(self.fingers[i].key))
 
     def init_fingers(self, existingnode):
         log.debug("%s - init_fingers with %s" %(self.uid, existingnode.uid))
