@@ -3,6 +3,7 @@ import sys
 import serverxmlrpc
 import clientxmlrpc
 import random
+from stabilizer import Stabilizer
 
 from key import Key, Uid
 
@@ -100,7 +101,7 @@ class Finger(object):
             raise TypeError("Finger.setRespNode() accept dict and NodeInterface")
 
 class LocalNode(BasicNode):
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, _stabilizer=True):
         BasicNode.__init__(self, ip, port)
         self.predecessor = None
         self.fingers = []
@@ -108,6 +109,11 @@ class LocalNode(BasicNode):
 
         self.server = serverxmlrpc.ChordServerxmlrpc(self)
         self.server.start()
+
+        self._stabilizer = _stabilizer
+        if _stabilizer:
+            self.stabilizer = Stabilizer(self)
+            self.stabilizer.start()
 
     @property
     def successor(self):
@@ -118,6 +124,11 @@ class LocalNode(BasicNode):
                 "port": self.port,
                 "uid": self.uid.value,
                 "succ": self.fingers[0].respNode.asdict()}
+
+    def stop(self):
+        if self._stabilizer:
+            self.stabilizer.stop()
+        self.stopXmlRPCServer()
 
     def stopXmlRPCServer(self):
         self.server.stop()
