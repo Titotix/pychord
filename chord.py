@@ -101,7 +101,7 @@ class Finger(object):
 class LocalNode(BasicNode):
     def __init__(self, ip, port):
         BasicNode.__init__(self, ip, port)
-        self.predecessor = NodeInterface(self)
+        self.predecessor = None
         self.fingers = []
         self.createfingertable()
 
@@ -116,8 +116,7 @@ class LocalNode(BasicNode):
         return {"ip": self.ip,
                 "port": self.port,
                 "uid": self.uid.value,
-                "succ": self.fingers[0].respNode.asdict(),
-                "prede": self.predecessor.asdict()}
+                "succ": self.fingers[0].respNode.asdict()}
 
     def stopXmlRPCServer(self):
         self.server.stop()
@@ -152,7 +151,10 @@ class LocalNode(BasicNode):
         return self.fingers[0].respNode.asdict()
 
     def getpredecessor(self):
-        return self.predecessor.asdict()
+        if self.predecessor:
+            return self.predecessor.asdict()
+        else:
+            return None
 
     def getNodeInterface(self, nodedict):
         """
@@ -165,8 +167,55 @@ class LocalNode(BasicNode):
             return NodeInterface(nodedict)
 
     def join(self, node):
+        """
+        Join method as described in the 4th paragraph
+        """
         self.init_fingers(node)
         self.update_others()
+
+    def join_5(self, nodeToJoin):
+        """
+        Join method as described in 5th paragraph
+        """
+        #self.predecessor = None
+        self.setsuccessor(nodeToJoin.methodProxy.find_successor(self.uid))
+
+    def _stabilize_and_fix_fingers(self):
+        """
+        Execute stabilize() and fix_fingers()
+        """
+
+        self.stabilize()
+        self.fix_fingers()
+
+    def stabilize(self):
+        node_inter = self.successor.methodProxy.getpredecessor()
+        if node_inter:
+            if node_inter["uid"] == self.uid:
+                """
+                successor's predecessor is self so everything is fine
+                Dont do anything
+                """
+                return
+            if self.uid == self.successor.uid\
+                    or Key(node_inter["uid"]).is_between_exclu(self.uid, self.successor.uid):
+                self.setsuccessor(node_inter)
+        if self.successor.uid != self.uid:
+            self.successor.methodProxy.notify_new_predecessor(self.asdict())
+
+    def notify_new_predecessor(self, new_predecessor):
+        """
+        Check wether `new_predecessor` is more accurate than current
+        self.predecessor. If so, change accordingly
+
+        This methods aims to be used by remote node which think they might
+        be self.predecessor
+
+        @param new_predecessor: dict node which might be our predecessor
+        """
+        if not self.predecessor\
+                or Key(new_predecessor["uid"]).is_between_exclu(self.predecessor.uid, self.uid):
+            self.setpredecessor(new_predecessor)
 
     def init_fingers(self, existingnode):
         log.debug("%s - init_fingers with %s" %(self.uid, existingnode.uid))
@@ -217,7 +266,8 @@ class LocalNode(BasicNode):
         Return the node which precede the provided key
         If key is equal to a node uid N, the return value is N.predecessor
 
-        Return a dict which contains info of a node
+        Return a dict which contains keys `ip`, `port`, `uid` and `succ`
+        which is it self a dict defining a node
 
         """
         if isinstance(key, dict):
@@ -236,7 +286,7 @@ class LocalNode(BasicNode):
         #TODO IDEA maybe: overwrite dispatch on xmlrpc server
         # then it is possible to dispatch on specific method for rpc
         # so in the next line case we are not force to transform cloPrecedFinger into a NodeInterface
-        #TODO avoid casting directly in NodeInterface because we loose potential succ/prede info from the original dict
+        #TODO avoid casting directly in NodeInterface because we loose potential succ info from the original dict
         cloPrecedFinger= self.getNodeInterface(self.closest_preceding_finger(key.value))
         cloPrecedFingerSucc = BasicNode(cloPrecedFinger.methodProxy.getsuccessor())
         if cloPrecedFinger.uid == cloPrecedFingerSucc.uid:
