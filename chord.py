@@ -239,7 +239,7 @@ class LocalNode(BasicNode):
         self.setsuccessor(find_pred_res["succ"])
         self.setpredecessor(find_pred_res)
         self.predecessor.methodProxy.setsuccessor(self.asdict()) # added compare to paper
-        self.fingers[0].respNode.methodProxy.setpredecessor(self.asdict())
+        self.successor.methodProxy.setpredecessor(self.asdict())
         for i in range(0, self.uid.idlength - 1):
             if self.fingers[i + 1].key.isbetween(self.fingers[i].key, self.fingers[i].respNode.uid): #changed from paper's algo which use self.uid in place of fingers[I].key
                 self.fingers[i + 1].setRespNode(self.fingers[i].respNode)
@@ -295,7 +295,7 @@ class LocalNode(BasicNode):
             raise TypeError("find_predecessor arg must be dict, str or Key")
 
         log.debug("%s - find_predecessor for '%s'" %(self.uid, key.value))
-        if self.uid == self.fingers[0].respNode.uid:
+        if self.uid == self.successor.uid:
             return self.asdict()
         if key.is_between_r_inclu(self.uid, self.successor.uid):
             return self.asdict()
