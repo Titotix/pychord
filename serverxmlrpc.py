@@ -20,6 +20,7 @@ class ChordServerxmlrpc(threading.Thread):
         )
 
     def run(self):
+        #TODO only expose methods which should be used
         self.tcpserver.register_instance(self.node)
         self.tcpserver.serve_forever()
 
